@@ -2,8 +2,15 @@
 
 	global	_serial_char_out
 	global	_serial_string_out
-
-	xref	_tester
+	global	_serial_in
+	global	_serial_char_waiting
+	
+	global	_DATA_START
+	global	_DATA_END
+	global	_BSS_START
+	global	_BSS_END
+	
+	xref	_Monitor_Go
 	
 	text
 
@@ -11,50 +18,52 @@
 
 	;; Main program
 START:
-	jsr		_tester
-	move.l	#PromptInputBuffer,a0
-	
 	JSR	MFPINIT
-	move.l	#BootBanner,a0
+
+	JSR	Copy_DataBSS
 	
-	jsr	_serial_string_out
+	JSR	_Monitor_Go
+	
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;
+Copy_DataBSS:
+	move.l	#_DATA_END,d0
+	move.l	#_DATA_START,d1
+	sub.l	d1,d0
+	
+	move.l	#$80000,a0			; start of .data
+	move.l	#RAMSTART,a1
+.copyLoop:
+	move.b	(a0)+,(a1)+
+	sub.l	#1,d0
+	cmp.l	#0,d0
+	bne		.copyLoop
 
-InitMonitorPrompt:
-	JSR	Monitor_ClearPromptBuffer
-	move.l	#PromptInputBuffer,a5
+	;; Okay, now clear the BSS section.
+	move.l	#_DATA_END,d0	
+	move.l	#_DATA_START,d1
+	sub.l	d1,d0				; d0 = length of .data
 
-	move.l	#CommandPrompt,a0
-	jsr	_serial_string_out
+	move.l	#RAMSTART,a1
+	add.l	d0,a1				; a1 = RAMSTART + .data length
 
-MonitorLoop:
-	jsr	_serial_char_waiting
-	tst.b	d0
-	beq	MonitorLoopDone	; nothing waiting
-
-	jsr	_serial_in	; get the character
-
-	cmp.b	#13,d0
-	beq	Monitor_GotCR
-	move.b	d0,(a5)+	; save the character
-	jsr	_serial_char_out ; print the character
-
-MonitorLoopDone:	
-	bra	MonitorLoop
-
-Monitor_GotCR:
-	JSR	Monitor_ProcessCommand
-	bra	InitMonitorPrompt
-
+	move.l	#_BSS_END,d0
+	move.l	#_BSS_START,d1
+	sub.l	d1,d0				; d0 = .bss length
+	move.l	#0,d1
+	
+.clearLoop:
+	move.b	d1,(a1)+
+	sub.l	#1,d0
+	cmp.l	#0,d0
+	bne		.clearLoop
+	
+	rts	
 	
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;
 MFPINIT:
 	clr.l	d0
 	subq	#1,d0		; d0 = all 1s
 	move.b	d0,MFPDDR	; all pins are output
-*	move.b	#3,MFPTCDR 	; 1/4 Tx clock
-*	move.b	#3,MFPTDDR 	; 1/4 Rx clock
-*	move.b	#$11,MFPTCDCR	; divide by 4 in C/D CNTRL REG
-*	move.b	#%10001000,MFPUCR ; set up for 8-N-1, clock/16
 
 	move.b	#$11,MFPTCDCR	; divide by 4 in C/D CNTRL REG
 	move.b	#%00001000,MFPUCR ; set up for 8-N-1
@@ -103,52 +112,5 @@ _serial_char_waiting:
 	
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
-BootBanner:	dc.b "Luigi SBC ROM Monitor - 2018-04-06",10,13,10,13,0
-HelloMsg:	dc.b "Hello, dumb terminal!",10,13,0
-
-Monitor_BadCommand:	dc.b "Invalid command",10,13,0
-	
-;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Monitor functions
-	
-	even
-Monitor_ClearPromptBuffer:
-	;; Fill the prompt buffer with NUL.
-	move.l	#PromptInputBuffer,a5
-	move.b	#0,d0
-	move.w	#255,d1
-
-.clearLoop:
-	move.b	d0,(a5)+
-	dbra	d1,.clearLoop
-	
-	rts
-
-	even
-Monitor_ProcessCommand:
-	move.l	#CRLF,a0
-	jsr	_serial_string_out
-
-	;; Check for a valid command...
-
-	;; If not valid, fall through and return.
-	move.l	#Monitor_BadCommand,a0
-	jsr	_serial_string_out
-	
-	move.l	#CRLF,a0
-	jsr	_serial_string_out
-	rts
-	
-;;; Monitor strings
-CRLF:		dc.b	10,13,0
-CommandPrompt:	dc.b "> ",0
-
-;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Monitor variables
-
-	DATA
-INPUT_BUFFER_SIZE equ 256
-PromptInputBuffer:	ds.b	INPUT_BUFFER_SIZE
-
-	BSS
+	end
 

@@ -8,23 +8,21 @@ MEMORY
 
 SECTIONS
 {
-	. = 0x0;
-	.text : {
+	TEXT 0x000000 : {
 		crt0.o( CODE )
 		. = 0x1000;
 		bootrom.o( CODE )
 		test.o( CODE )
-		libc68k.a ( CODE)
+		monitor.o( CODE )
+		libc68k.a ( CODE )
+		_DATA_REAL = .;
 	}
-	.data : AT ( 0x100000 ) { 
-		. = ALIGN( 0x1000 )
+	DATA 0x100000 : AT (0x80000) { 
 		_DATA_START = .;
-		VBCC_CONSTRUCTORS
-		*(.data DATA data) 
+		*(.data DATA data)
 		_DATA_END = .;
 	}
-	.bss : AT ( 0x100000 + SIZEOF (.data) + 32 ) { 
-		. =ALIGN( 0x1000 )
+	BSS 0x100000 + SIZEOF(DATA) : { 
 		_BSS_START = .;
 		*(.bss BSS bss)
 		*(COMMON)
