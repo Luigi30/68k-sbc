@@ -5,7 +5,7 @@ CC	= vbccm68k
 CFLAGS	= -cpu=68000 -c99
 
 LD=vlink
-LDFLAGS = -M -brawbin1 -nostdlib -Tsbc.ld
+LDFLAGS = -M -Bstatic -brawbin1 -nostdlib -Tsbc.ld -Llibc/bin
 
 SRCDIR = ./src
 OBJDIR = ./obj
@@ -13,7 +13,7 @@ BINDIR = ./bin
 INCDIR = .
 
 $(BINDIR)/bootrom.bin: $(OBJDIR)/crt0.o $(OBJDIR)/bootrom.o $(OBJDIR)/test.o
-	vlink $(LDFLAGS) -o $(BINDIR)/bootrom.bin $^
+	vlink $(LDFLAGS) -l c68k -o $(BINDIR)/bootrom.bin $^
 	cp $@ /mnt/c/msys64/home/Luigi/mame/roms/luigisbc/68000.bin
 #	m68k-elf-objcopy.exe --pad-to=0x100000 --gap-fill=0xFF bin\\bootrom.bin /mnt/c/msys64/home/Luigi/mame/roms/luigisbc/68000.bin
 
@@ -28,6 +28,9 @@ $(OBJDIR)/test.s: $(SRCDIR)/test.c
 
 $(OBJDIR)/test.o: $(OBJDIR)/test.s
 	$(AS) $(ASFLAGS) -Fvobj -o $@ $<
+
+libc/bin/libc68k.a:
+	$(MAKE) -C libc
 
 .PHONY: clean
 

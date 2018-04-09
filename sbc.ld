@@ -14,9 +14,20 @@ SECTIONS
 		. = 0x1000;
 		bootrom.o( CODE )
 		test.o( CODE )
+		libc68k.a ( CODE)
 	}
-			
-	. = 0x100000;
-	.data : { *(.data) }
-	.bss : { *(.bss) }
+	.data : AT ( 0x100000 ) { 
+		. = ALIGN( 0x1000 )
+		_DATA_START = .;
+		VBCC_CONSTRUCTORS
+		*(.data DATA data) 
+		_DATA_END = .;
+	}
+	.bss : AT ( 0x100000 + SIZEOF (.data) + 32 ) { 
+		. =ALIGN( 0x1000 )
+		_BSS_START = .;
+		*(.bss BSS bss)
+		*(COMMON)
+		_BSS_END = .; 
+	}
 }

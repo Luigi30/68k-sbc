@@ -1,13 +1,22 @@
 	include	"equates.s"
 
+	global	_serial_char_out
+	global	_serial_string_out
+
+	xref	_tester
+	
 	text
 
 	org	$1000
 
 	;; Main program
 START:
+	jsr		_tester
+	move.l	#PromptInputBuffer,a0
+	
 	JSR	MFPINIT
 	move.l	#BootBanner,a0
+	
 	jsr	_serial_string_out
 
 InitMonitorPrompt:
@@ -136,7 +145,10 @@ CommandPrompt:	dc.b "> ",0
 
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Monitor variables
+
+	DATA
 INPUT_BUFFER_SIZE equ 256
-	
 PromptInputBuffer:	ds.b	INPUT_BUFFER_SIZE
-	end
+
+	BSS
+
