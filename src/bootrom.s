@@ -9,6 +9,9 @@
 	global	_DATA_END
 	global	_BSS_START
 	global	_BSS_END
+
+	global	_MEMTOP
+	global	_MEMBOT
 	
 	xref	_Monitor_Go
 	
@@ -30,7 +33,7 @@ Copy_DataBSS:
 	move.l	#_DATA_START,d1
 	sub.l	d1,d0
 	
-	move.l	#$80000,a0			; start of .data
+	move.l	#_DATA_START,a0			; start of .data
 	move.l	#RAMSTART,a1
 .copyLoop:
 	move.b	(a0)+,(a1)+
@@ -42,20 +45,25 @@ Copy_DataBSS:
 	move.l	#_DATA_END,d0	
 	move.l	#_DATA_START,d1
 	sub.l	d1,d0				; d0 = length of .data
-
+	move.l	d0,d2
+	
 	move.l	#RAMSTART,a1
 	add.l	d0,a1				; a1 = RAMSTART + .data length
-
+	
 	move.l	#_BSS_END,d0
 	move.l	#_BSS_START,d1
 	sub.l	d1,d0				; d0 = .bss length
 	move.l	#0,d1
+	add.l	d0,d2
 	
 .clearLoop:
 	move.b	d1,(a1)+
 	sub.l	#1,d0
 	cmp.l	#0,d0
 	bne		.clearLoop
+
+	move.l	d2,_MEMBOT
+	move.l	#$1FFFFF,_MEMTOP
 	
 	rts	
 	
@@ -111,6 +119,11 @@ _serial_char_waiting:
 	rts
 	
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	DATA
+
+_MEMBOT dc.l 0
+_MEMTOP dc.l 0
 	
 	end
 

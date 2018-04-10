@@ -10,7 +10,7 @@ OBJDIR = obj
 BINDIR = bin
 SRCDIR = src
 
-_OBJS = string.o stdio.o
+_OBJS = string.o stdio.o math32.o
 OBJS = $(patsubst %,$(OBJDIR)/%,$(_OBJS))
 
 all: $(BINDIR)/libc68k.a
@@ -18,11 +18,11 @@ all: $(BINDIR)/libc68k.a
 	@echo Creating libc68k.a
 	@echo
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.S
+$(OBJDIR)/%.o: $(SRCDIR)/%.s
 	$(AS) $(ASFLAGS) -o $@ $<
 
 $(OBJDIR)/%.s: $(SRCDIR)/%.c $(INCDIR)/%.h
 	$(CC) $(CFLAGS) -o=$@ $<
 
 $(BINDIR)/libc68k.a: $(OBJS)
-	ar rcs $@ $<
+	ar rcs $@ $^

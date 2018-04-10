@@ -67,6 +67,7 @@ void Monitor_ClearPromptBuffer()
 #define CMD_RUN 'r'
 #define CMD_SETMEM 's'
 #define CMD_DUMPMEM 'd'
+#define CMD_ROMBOOT 'b'
 
 void Monitor_ProcessEntry()
 {
@@ -93,6 +94,11 @@ void Monitor_ProcessEntry()
   else if(inputBuffer[0] == CMD_DUMPMEM)
 	{
 	  serial_string_out("DUMP MEMORY...");
+	}
+  else if(inputBuffer[0] == CMD_ROMBOOT)
+	{
+	  serial_string_out("ROM BOOT");
+	  FAT_BootROM();
 	}
   else
 	{

@@ -5,7 +5,7 @@ CC	= vbccm68k
 CFLAGS	= -cpu=68000 -c99 -I$(LIBCINCDIR)
 
 LD=vlink
-LDFLAGS = -M -Bstatic -bsrec28 -nostdlib -Tsbc.ld -Llibc/bin
+LDFLAGS = -M -Bstatic -bsrec28 -nostdlib -Tsbc.ld -Llibc/bin -Lc68k
 
 SRCDIR = ./src
 OBJDIR = ./obj
@@ -13,8 +13,8 @@ BINDIR = ./bin
 INCDIR = .
 LIBCINCDIR = ./libc/include
 
-$(BINDIR)/bootrom.s68: $(OBJDIR)/crt0.o $(OBJDIR)/bootrom.o $(OBJDIR)/monitor.o
-	vlink $(LDFLAGS) -l c68k -o $(BINDIR)/bootrom.s68 $^
+$(BINDIR)/bootrom.s68: $(OBJDIR)/crt0.o $(OBJDIR)/bootrom.o $(OBJDIR)/monitor.o $(OBJDIR)/romfs.o $(OBJDIR)/fat.o
+	vlink $(LDFLAGS) -lc68k -o $(BINDIR)/bootrom.s68 $^
 	cp bin/bootrom.s68 /mnt/c/EASy68K/
 	m68k-atari-mint-objcopy -I srec -O binary $@ --pad-to=0x100000 /mnt/c/msys64/home/Luigi/mame/roms/luigisbc/68000.bin
 
@@ -28,6 +28,15 @@ $(OBJDIR)/monitor.s: $(SRCDIR)/monitor.c
 	$(CC) $(CFLAGS) -o=$@ $<
 
 $(OBJDIR)/monitor.o: $(OBJDIR)/monitor.s
+	$(AS) $(ASFLAGS) -Fvobj -o $@ $<
+
+$(OBJDIR)/fat.s: $(SRCDIR)/fat.c
+	$(CC) $(CFLAGS) -o=$@ $<
+
+$(OBJDIR)/fat.o: $(OBJDIR)/fat.s
+	$(AS) $(ASFLAGS) -Fvobj -o $@ $<
+
+$(OBJDIR)/romfs.o: $(SRCDIR)/romfs.s
 	$(AS) $(ASFLAGS) -Fvobj -o $@ $<
 
 libc/bin/libc68k.a:

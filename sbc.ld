@@ -11,21 +11,28 @@ SECTIONS
 	TEXT 0x000000 : {
 		crt0.o( CODE )
 		. = 0x1000;
-		bootrom.o( CODE )
-		test.o( CODE )
-		monitor.o( CODE )
-		libc68k.a ( CODE )
+		*.o( CODE )
+		*.a( CODE)
+		. = ALIGN(4);
 		_DATA_REAL = .;
-	}
-	DATA 0x100000 : AT (0x80000) { 
-		_DATA_START = .;
+	} >ROM
+	ROM 0x80000 : {
+		romfs.o( ROMFS )
+	} >ROM
+	DATA: { 
+		VBCC_CONSTRUCTORS
 		*(.data DATA data)
-		_DATA_END = .;
-	}
-	BSS 0x100000 + SIZEOF(DATA) : { 
+		. = ALIGN(4);
+	} >RAM AT>ROM
+	BSS (NOLOAD): { 
+		. = ALIGN(0x1000);
 		_BSS_START = .;
 		*(.bss BSS bss)
 		*(COMMON)
-		_BSS_END = .; 
-	}
+		. = ALIGN(4);
+		_BSS_END = .;
+	} >RAM
+
+	_DATA_START = LOADADDR(DATA);
+	_DATA_END = LOADADDR(DATA) + SIZEOF(DATA);
 }
