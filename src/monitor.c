@@ -4,15 +4,19 @@
 int input_buffer_position = 0;
 
 char inputBuffer[INPUT_BUFFER_SIZE];
-char STR_BootBanner[] = "Luigi's 68K SBC ROM Monitor - 2018-04-09";
+char STR_BootBanner[] = "Procyon 68000 ROM Monitor - 2018-04-10";
 char STR_CRLF[] = "\r\n";
 char STR_CommandPrompt[] = "> ";
 
 void Monitor_Go()
-{
+{  
   Monitor_DrawBanner();
   Monitor_InitPrompt();
 
+  printf("Memory Manager test\n");
+  MEMMGR_HANDLE hndl = MEMMGR_AllocMem(128, MEM_NOFLAGS);
+  printf("hndl: $%06X\n", hndl);
+  
   while(TRUE)
 	{
 	  Monitor_WaitForEntry();
@@ -81,23 +85,23 @@ void Monitor_ProcessEntry()
   
   if(inputBuffer[0] == CMD_EXAMINE)
 	{
-	  serial_string_out("EXAMINE...");
+	  serial_string_out("EXAMINE...\n");
 	}
   else if(inputBuffer[0] == CMD_RUN)
 	{
-	  serial_string_out("RUN...");
+	  serial_string_out("RUN...\n");
 	}
   else if(inputBuffer[0] == CMD_SETMEM)
 	{
-	  serial_string_out("SET MEMORY...");
+	  serial_string_out("SET MEMORY...\n");
 	}
   else if(inputBuffer[0] == CMD_DUMPMEM)
 	{
-	  serial_string_out("DUMP MEMORY...");
+	  serial_string_out("DUMP MEMORY...\n");
 	}
   else if(inputBuffer[0] == CMD_ROMBOOT)
 	{
-	  serial_string_out("ROM BOOT");
+	  serial_string_out("ROM BOOT\n");
 	  FAT_BootROM();
 	}
   else

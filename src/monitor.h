@@ -1,8 +1,8 @@
 #include <string.h>
-#include "serial.h"
+#include <stdio.h>
 
-#define TRUE 1
-#define FALSE 0
+#include "serial.h"
+#include "memmgr.h"
 
 void Monitor_DrawBanner();
 void Monitor_InitPrompt();

@@ -1,5 +1,51 @@
 #include <string.h>
 
+void *memcpy(void *destination, const void *source, size_t num)
+{
+  char *source_c = source;
+  char *destination_c = destination;
+  
+  /* TODO: optimize */
+  for(int i=0; i<num; i++)
+	{
+	  destination_c[i] = source_c[i];
+	}
+
+  return destination;
+}
+
+void *memset(void *destination, int c, size_t num)
+{
+  unsigned char _c = (unsigned char)c;
+  char *destination_c = destination;
+  
+  for(int i=0; i<num; i++)
+	{
+	  destination_c[i] = _c;
+	}
+
+  return destination;
+}
+
+int strcmp(const char *lhs, const char *rhs)
+{
+  char result;
+  int current = 0;
+  
+  while(1)
+	{
+	  result = (unsigned char)lhs[current] - (unsigned char)rhs[current];
+	  if(result > 0)
+		return 1;
+	  else if(result < 0)
+		return -1;
+	  else if(lhs == 0x00 && rhs == 0x00)
+		return 0;
+
+	  current++;
+	}
+}
+
 size_t strlen(const char *str){
 	size_t size = 0;
 

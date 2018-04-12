@@ -10,10 +10,10 @@
 	global	_BSS_START
 	global	_BSS_END
 
-	global	_MEMTOP
-	global	_MEMBOT
-	
+	xref	_MEMMGR_Initialize
 	xref	_Monitor_Go
+	global	_MEMBOT
+	global	_MEMTOP
 	
 	text
 
@@ -24,7 +24,8 @@ START:
 	JSR	MFPINIT
 
 	JSR	Copy_DataBSS
-	
+
+	JSR	_MEMMGR_Initialize
 	JSR	_Monitor_Go
 	
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -62,8 +63,12 @@ Copy_DataBSS:
 	cmp.l	#0,d0
 	bne		.clearLoop
 
+	add.l	#RAMSTART,d2
+	add.l	#32,d2
+	move.l	#$FFFFFFF0,d1
+	and.l	d1,d2
 	move.l	d2,_MEMBOT
-	move.l	#$1FFFFF,_MEMTOP
+	move.l	#$1FF000,_MEMTOP
 	
 	rts	
 	
@@ -121,9 +126,7 @@ _serial_char_waiting:
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 	DATA
-
-_MEMBOT dc.l 0
-_MEMTOP dc.l 0
+_MEMTOP	ds.l	1				; $100000
+_MEMBOT	ds.l	1				; $100004
 	
 	end
-

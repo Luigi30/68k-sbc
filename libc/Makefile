@@ -10,7 +10,7 @@ OBJDIR = obj
 BINDIR = bin
 SRCDIR = src
 
-_OBJS = string.o stdio.o math32.o
+_OBJS = string.o stdio.o math32.o stdlib.o
 OBJS = $(patsubst %,$(OBJDIR)/%,$(_OBJS))
 
 all: $(BINDIR)/libc68k.a
