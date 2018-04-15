@@ -30,7 +30,7 @@ typedef struct fat_bpb_t {
   uint16_t hidden_sectors;
   uint8_t extended_fields_present;
   char volume_label[12];
-char filesystem_type[12];
+  char filesystem_type[12];
 } FAT_BPB;
 
 typedef struct fat_root_directory_entry_t {
@@ -58,7 +58,6 @@ typedef enum drive_letter_t {
   DRIVE_Z
 } DRIVE_LETTER;
 
-
 /* file flags */
 typedef enum fat_file_flags_t {
   FILE_FLAG_UNUSED = 0x00,
@@ -70,6 +69,7 @@ typedef enum fat_file_flags_t {
 typedef struct fat_file_descriptor_t {
   uint16_t id;
   FAT_FILE_FLAGS flags;
+  FAT_ROOT_DIRECTORY_ENTRY *root_dir_entry;
   char path[128];
 } FAT_FILE_DESCRIPTOR;
 
@@ -78,7 +78,10 @@ static FAT_FILE_DESCRIPTOR file_descriptor_table[FILES_LIMIT];
 static FAT_BPB rom_bpb;
 static uint16_t rom_fat[5120]; /* TODO: dynamic memory allocation */
 static FAT_ROOT_DIRECTORY_ENTRY rom_root_dir[224];
+
 static FAT_BPB *drive_bpb[26];
+static FAT_ROOT_DIRECTORY_ENTRY *drive_root_dir[26];
+static uint16_t *drive_fat[26];
 
 #define SECTOR_OFFSET(data, bytes_per_sector, num) ( (char *)data+(bytes_per_sector*(num)) )
 
