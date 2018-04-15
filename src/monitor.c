@@ -13,10 +13,20 @@ void Monitor_Go()
   Monitor_DrawBanner();
   Monitor_InitPrompt();
 
+  /*
   printf("Memory Manager test\n");
-  MEMMGR_HANDLE hndl = MEMMGR_AllocMem(128, MEM_NOFLAGS);
-  printf("hndl: $%06X\n", hndl);
-  
+  HANDLE hndl = MEMMGR_NewHandle(128);
+  printf("Memory Manager returned a handle: $%06X\n", hndl);
+  printf("Handle dereferences to: $%06X\n", *hndl);
+
+  HANDLE hndl2 = MEMMGR_NewHandle(234);
+  printf("Memory Manager returned a handle: $%06X\n", hndl2);
+  printf("Handle dereferences to: $%06X\n", *hndl2);
+
+  MEMMGR_DisposeHandle(hndl);
+  MEMMGR_DumpSystemHeapBlocks();
+  */  
+
   while(TRUE)
 	{
 	  Monitor_WaitForEntry();

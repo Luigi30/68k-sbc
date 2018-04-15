@@ -5,7 +5,7 @@ CC	= vbccm68k
 CFLAGS	= -cpu=68000 -c99 -I$(LIBCINCDIR)
 
 LD=vlink
-LDFLAGS = -Bstatic -bsrec28 -nostdlib -Tsbc.ld -Llibc/bin -Lc68k
+LDFLAGS = -M -Bstatic -bsrec28 -nostdlib -Tsbc.ld -Llibc/bin -Lc68k
 
 SRCDIR = ./src
 OBJDIR = ./obj

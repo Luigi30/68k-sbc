@@ -34,12 +34,13 @@ int strcmp(const char *lhs, const char *rhs)
   
   while(1)
 	{
-	  result = (unsigned char)lhs[current] - (unsigned char)rhs[current];
+	  result = (uint8_t)lhs[current] - (uint8_t)rhs[current];
+
 	  if(result > 0)
 		return 1;
 	  else if(result < 0)
 		return -1;
-	  else if(lhs == 0x00 && rhs == 0x00)
+	  else if((uint8_t)lhs[current] == 0x00 && (uint8_t)rhs[current] == 0x00)
 		return 0;
 
 	  current++;

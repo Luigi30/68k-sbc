@@ -2,6 +2,8 @@
 #define STRING_H__
 
 #include <stddef.h>
+#include <stdio.h>
+#include <stdint.h>
 
 size_t strlen(const char *str);
 char *strcpy(char *dest, const char *src);
