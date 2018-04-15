@@ -26,3 +26,8 @@ $(OBJDIR)/%.s: $(SRCDIR)/%.c $(INCDIR)/%.h
 
 $(BINDIR)/libc68k.a: $(OBJS)
 	ar rcs $@ $^
+
+.PHONY: clean
+
+clean:
+	rm -f obj/* bin/*
