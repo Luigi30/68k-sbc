@@ -1,8 +1,8 @@
 AS      = vasmm68k_mot
-ASFLAGS = -m68000 -align -I$(INCDIR)
+ASFLAGS = -m68000 -align -I$(INCDIR) -I$(INCDIR)/AInclude
 
 CC	= vbccm68k
-CFLAGS	= -cpu=68000 -c99 -I$(LIBCINCDIR)
+CFLAGS	= -cpu=68000 -c99 -I$(LIBCINCDIR) -I$(INCDIR)/CInclude
 
 LD=vlink
 LDFLAGS = -M -Bstatic -bsrec28 -nostdlib -Tsbc.ld -Llibc/bin -Lc68k
@@ -10,7 +10,7 @@ LDFLAGS = -M -Bstatic -bsrec28 -nostdlib -Tsbc.ld -Llibc/bin -Lc68k
 SRCDIR = ./src
 OBJDIR = ./obj
 BINDIR = ./bin
-INCDIR = .
+INCDIR = ./include
 LIBCINCDIR = ./libc/include
 
 $(BINDIR)/bootrom.s68: $(OBJDIR)/crt0.o $(OBJDIR)/bootrom.o $(OBJDIR)/monitor.o $(OBJDIR)/romfs.o $(OBJDIR)/fat.o $(OBJDIR)/log.o \
