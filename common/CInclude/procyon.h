@@ -1,9 +1,8 @@
 #ifndef PROCYON_H__
 #define PROCYON_H__
 
-#define MMIO32(x)   (*(volatile unsigned long *)(x))
-#define MMIO16(x)   (*(volatile unsigned short *)(x))
-#define MMIO8(x)    (*(volatile unsigned char *)(x))
+#include "mmio.h"
+#include "types.h"
 
 /* System variable locations */
 #define P_MEMTOP 0x100000

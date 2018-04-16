@@ -75,7 +75,6 @@ typedef struct fat_file_descriptor_t {
 
 #define FILES_LIMIT 10
 static FAT_FILE_DESCRIPTOR file_descriptor_table[FILES_LIMIT];
-static FAT_BPB rom_bpb;
 static uint16_t rom_fat[5120]; /* TODO: dynamic memory allocation */
 static FAT_ROOT_DIRECTORY_ENTRY rom_root_dir[224];
 

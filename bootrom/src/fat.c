@@ -1,7 +1,5 @@
 #include "fat.h"
 
-#define ROMFS_START 0x80000
-
 uint16_t swap_word_endianness(uint16_t value)
 {
   return (uint16_t)(((value & 0xFF) << 16) | ((value & 0xFF00) >> 16));
@@ -22,6 +20,9 @@ uint32_t get_swapped_long(uint8_t *location)
 
 void FAT_BootROM()
 {
+  FAT_BPB *rom_bpb = MEMMGR_NewPtr(sizeof(FAT_BPB));
+  printf("rom_bpb: %x\n", rom_bpb);
+
   // Clear all drive letters.
   for(int i=0; i<26; i++)
 	drive_bpb[i] = NULL;
@@ -32,35 +33,35 @@ void FAT_BootROM()
 	  file_descriptor_table[i].flags = FILE_FLAG_UNUSED;
 	  memset(file_descriptor_table[i].path, 0x00, 128);
 	}
+  
+  /* Identify the disk at ROMFS_START. */
+  char buffer[64];
+  int bootstrap = (MMIO32(P_ROMDISK) >> 8);
+  itoa(bootstrap, buffer, 16);
+  printf("\n");
 
-  for(int i=0;i<224;i++)
+  FAT_ReadBPB(rom_bpb, DRIVE_R, (char *)P_ROMDISK);
+  FAT_PrintBPBInfo(DRIVE_R);
+
+  drive_bpb[DRIVE_R] = rom_bpb;
+  drive_fat[DRIVE_R] = rom_fat;
+  drive_root_dir[DRIVE_R] = rom_root_dir;
+
+  for(int i=0;i<drive_bpb[DRIVE_R]->root_directory_entries;i++)
 	{
 	  rom_root_dir[i].allocation_or_first_letter = 0x00;
 	  rom_root_dir[i].filename[0] = 0x00;
 	}
   
-  /* Identify the disk at ROMFS_START. */
-  char buffer[64];
-  int bootstrap = (MMIO32(ROMFS_START) >> 8);
-  itoa(bootstrap, buffer, 16);
-
-  printf("\n");
-
-  FAT_ReadBPB(&rom_bpb, DRIVE_R, (char *)ROMFS_START);
-  FAT_PrintBPBInfo(DRIVE_R);
-  drive_bpb[DRIVE_R] = &rom_bpb;
-  drive_fat[DRIVE_R] = rom_fat;
-  drive_root_dir[DRIVE_R] = rom_root_dir;
-  
-  char sector_decoded_buffer[rom_bpb.bytes_per_sector];
+  char sector_decoded_buffer[drive_bpb[DRIVE_R]->bytes_per_sector];
     
   /* Read a 10-sector FAT12 FAT. */
-  FAT_DecodeFAT12FAT((char *)(ROMFS_START+FAT_OffsetFATStart(drive_bpb[DRIVE_R])),
+  FAT_DecodeFAT12FAT((char *)(P_ROMDISK+FAT_OffsetFATStart(drive_bpb[DRIVE_R])),
 					 rom_fat);
   printf("FAT: Read FAT12 FAT into memory at %06X\n", &rom_fat);
 
   FAT_DumpRootDirectory(DRIVE_R,
-						rom_root_dir,
+						drive_root_dir[DRIVE_R],
 						(char *)(0x80000 + FAT_OffsetRootDirStart(drive_bpb[DRIVE_R])));
 
   printf("ROM drive is open as R:\n");

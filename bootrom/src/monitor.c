@@ -112,6 +112,7 @@ void Monitor_ProcessEntry()
   else if(inputBuffer[0] == CMD_ROMBOOT)
 	{
 	  serial_string_out("ROM BOOT\n");
+	  MEMMGR_DumpSystemHeapBlocks();
 	  FAT_BootROM();
 	}
   else

@@ -1,9 +1,8 @@
 #include "stdlib.h"
 #include "stdio.h"
 
-#define MMIO32(x)   (*(volatile unsigned long *)(x))
-#define MMIO16(x)   (*(volatile unsigned short *)(x))
-#define MMIO8(x)    (*(volatile unsigned char *)(x))
+extern CPTR MEMMGR_NewPtr(uint32_t requested_size);
+extern void MEMMGR_DisposePtr(void *ptr);
 
 void swap(char *a, char *b)
 {
@@ -83,6 +82,7 @@ char *itoa(int num, char *str, int base)
 uint32_t first_free_block = 0;
 
 /* Straight fixed-block allocator suitable for single-tasking. */
+/*
 void *malloc(int size)
 {	
   int requested_blocks = size/BLOCK_SIZE;
@@ -101,9 +101,16 @@ void *malloc(int size)
   printf("malloc: %d bytes (%d blocks) requested. returning: $%06X\n", size, requested_blocks, current_heap_bottom);
   return current_heap_bottom;
 }
+*/
+
+/* reroute malloc to NewPtr */
+void *malloc(int size)
+{
+  return MEMMGR_NewPtr(size);
+}
 
 void free(void *block)
 {
-  /* TODO: free() */
+  MEMMGR_DisposePtr(block);
 }
 

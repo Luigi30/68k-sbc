@@ -13,6 +13,5 @@ int atoi(char *str);
 char *itoa(int num, char *str, int base);
 
 void *malloc(int size);
-extern char * MEMTOP, MEMBOT;
 
 #endif
