@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "mmio.h"
+
 #include "procyon.h"
 
 /*

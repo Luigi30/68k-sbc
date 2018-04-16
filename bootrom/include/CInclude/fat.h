@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mmio.h"
+#include "procyon.h"
 #include "stdint.h"
 #include "serial.h"
 #include "log.h"
