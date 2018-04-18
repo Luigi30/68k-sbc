@@ -4,29 +4,20 @@
 int input_buffer_position = 0;
 
 char inputBuffer[INPUT_BUFFER_SIZE];
-char STR_BootBanner[] = "Procyon 68000 ROM Monitor - 2018-04-10";
+char STR_BootBanner[] = "Procyon 68000 ROM Monitor - 2018-04-17";
 char STR_CRLF[] = "\r\n";
 char STR_CommandPrompt[] = "> ";
+
+extern void DoLineATest();
 
 void Monitor_Go()
 {  
   Monitor_DrawBanner();
   Monitor_InitPrompt();
 
-  /*
-  printf("Memory Manager test\n");
-  HANDLE hndl = MEMMGR_NewHandle(128);
-  printf("Memory Manager returned a handle: $%06X\n", hndl);
-  printf("Handle dereferences to: $%06X\n", *hndl);
-
-  HANDLE hndl2 = MEMMGR_NewHandle(234);
-  printf("Memory Manager returned a handle: $%06X\n", hndl2);
-  printf("Handle dereferences to: $%06X\n", *hndl2);
-
-  MEMMGR_DisposeHandle(hndl);
-  MEMMGR_DumpSystemHeapBlocks();
-  */  
-
+  printf("Boot ROM: Executing OSFunc $A001\n");
+  DoLineATest();
+  
   while(TRUE)
 	{
 	  Monitor_WaitForEntry();

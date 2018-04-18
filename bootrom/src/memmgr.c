@@ -9,8 +9,8 @@ CPTR master_pointer_list[MASTER_POINTER_COUNT];
 
 void MEMMGR_Initialize()
 {
-  system_heap_start = (CPTR)MMIO32(P_MEMBOT);
-  system_heap_end = (CPTR)(MMIO32(P_MEMBOT)+SYSTEM_HEAP_SIZE);
+  system_heap_start = (CPTR)0x104000;
+  system_heap_end = (CPTR)0x114000;
 
   printf("MEMMGR_Initialize()\n");
   
@@ -22,8 +22,8 @@ void MEMMGR_Initialize()
   master_block->flags = MEMMGR_BLOCK_FLAG_FREE;
   master_block->destination = (CPTR)((uint32_t)(system_heap_start)+sizeof(MEMMGR_BLOCK));
 
-  printf("Memory size is %06x\n", master_block->size);
-  printf("System heap: $%06X-$%06X\n", system_heap_start, system_heap_end);
+  printf("System heap size is %06x\n", master_block->size);
+  printf("System heap location: $%06X-$%06X\n", system_heap_start, system_heap_end);
 
   system_heap_blocks = master_block;
 
@@ -79,11 +79,18 @@ CPTR MEMMGR_AllocateBlock(uint32_t requested_size, MEMMGR_BLOCK_FLAGS flags)
 			 block->size,
 			 (block->flags & MEMMGR_BLOCK_FLAG_FREE) == 0x04);
 
-	  if((uint32_t)block->previous > P_RAMEND ||
-		 (uint32_t)block->next > P_RAMEND ||
-		 (uint32_t)block->destination > P_RAMEND)
+	  if((uint32_t)block->previous > RAMEnd ||
+		 (uint32_t)block->next > RAMEnd ||
+		 (uint32_t)block->destination > RAMEnd)
 		{
-		  printf("MEMMGR_AllocateBlock: Heap is corrupt! Halting system.\n");
+		  printf("MEMMGR_AllocateBlock: Heap is corrupt! \nHalting system.\n");
+		  while(true) {};
+		}
+
+	  if((uint32_t)block->destination == 0x0)
+		{
+		  printf("MEMMGR_AllocateBlock: Heap is corrupt: block points to 0x000000.\nHalting system.\n");
+		  while(true) {};
 		}
 			 
 	  if((block->flags & MEMMGR_BLOCK_FLAG_FREE) &&
@@ -140,13 +147,12 @@ void MEMMGR_DumpSystemHeapBlocks()
   printf("*** DumpSystemHeapBlocks ***\n");
   while(block != NULL)
 	{
-	  printf("BLOCK AT $%06X - size %d, ptr: $%06X, p: $%06X, n: $%06X, f?: %d\n",
+	  printf("BLOCK AT $%06X - size %d, ptr: $%06X, fixed: %d, free: %d\n",
 			 block,
 			 block->size,
 			 block->destination,
-			 block->previous,
-			 block->next,
-			 (block->flags & MEMMGR_BLOCK_FLAG_FREE) == 0x04);
+			 (block->flags & MEMMGR_BLOCK_FLAG_FIXED) == MEMMGR_BLOCK_FLAG_FIXED,
+			 (block->flags & MEMMGR_BLOCK_FLAG_FREE) == MEMMGR_BLOCK_FLAG_FREE);
 	  block = block->next;
 	}
 

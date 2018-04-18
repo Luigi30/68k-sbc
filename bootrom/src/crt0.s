@@ -1,5 +1,5 @@
 	global _bios_start
-
+	
 VEC_RESET_INITIAL_SSP:		* $000000 */
 	dc.l	$1FFF00	* Stack pointer - last page of RAM. */
 
@@ -31,7 +31,7 @@ VEC_TRACE_INSTRUCTION:		* $000024 */
 	dc.l	_bios_start
 
 VEC_LINE_A_INSTRUCTION:		* $000028 */
-	dc.l	_bios_start
+	dc.l	LineA_Dispatcher
 
 VEC_LINE_F_INSTRUCTION:		* $00002C */
 	dc.l	_bios_start

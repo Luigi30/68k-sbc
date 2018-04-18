@@ -4,7 +4,7 @@
 	global	_serial_string_out
 	global	_serial_in
 	global	_serial_char_waiting
-	
+
 	global	_DATA_START
 	global	_DATA_END
 	global	_BSS_START
@@ -12,9 +12,7 @@
 
 	xref	_MEMMGR_Initialize
 	xref	_Monitor_Go
-	global	_MEMBOT
-	global	_MEMTOP
-	
+
 	text
 
 	org	$1000
@@ -24,10 +22,11 @@ START:
 	JSR	MFPINIT
 
 	JSR	Copy_DataBSS
+	JSR	InitSysVars
 
 	JSR	_MEMMGR_Initialize
 	JSR	_Monitor_Go
-	
+
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;
 Copy_DataBSS:
 	move.l	#_DATA_END,d0
@@ -67,11 +66,11 @@ Copy_DataBSS:
 	add.l	#32,d2
 	move.l	#$FFFFFFF0,d1
 	and.l	d1,d2
-	move.l	d2,_MEMBOT
-	move.l	#$1FF000,_MEMTOP
-	
-	rts	
-	
+	move.l	d2,_RAMBase
+	move.l	#$1FF000,_RAMEnd
+
+	rts
+
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;
 MFPINIT:
 	clr.l	d0
@@ -122,11 +121,11 @@ _serial_char_waiting:
 .yes:
 	move.l	#1,d0
 	rts
-	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitSysVars:
+	move.l	#$80000,_ROMDiskBase
+	rts
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	DATA
-_MEMTOP	ds.l	1				; $100000
-_MEMBOT	ds.l	1				; $100004
-	
 	end

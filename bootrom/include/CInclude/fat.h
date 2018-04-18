@@ -10,7 +10,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ROM_DRIVE_START 0x80000
+#define FILES_LIMIT 10
+#define DRIVES_LIMIT 26
+
+typedef enum {
+  FS_FAT12,
+  FS_FAT16,
+  FS_FAT32
+} FAT_FSTYPE;
 
 /* FAT12 constants */
 #define FAT12_FAT_SECTOR_COUNT 2
@@ -30,12 +37,12 @@ typedef struct fat_bpb_t {
   uint16_t hidden_sectors;
   uint8_t extended_fields_present;
   char volume_label[12];
-  char filesystem_type[12];
+  char filesystem_type[12]; //reported by the BPB, not actual fs
 } FAT_BPB;
 
 typedef struct fat_root_directory_entry_t {
   char allocation_or_first_letter;
-  char filename[12]; // not the filename on the disk! modified!
+  char filename[12]; // not the filename on the disk! a . was inserted
   uint8_t attributes;
   uint8_t reserved;
   uint8_t creation_time_tenths;
@@ -55,7 +62,7 @@ typedef enum drive_letter_t {
   DRIVE_K, DRIVE_L, DRIVE_M, DRIVE_N, DRIVE_O,
   DRIVE_P, DRIVE_Q, DRIVE_R, DRIVE_S, DRIVE_T,
   DRIVE_U, DRIVE_V, DRIVE_W, DRIVE_X, DRIVE_Y,
-  DRIVE_Z
+  DRIVE_Z,
 } DRIVE_LETTER;
 
 /* file flags */
@@ -73,22 +80,16 @@ typedef struct fat_file_descriptor_t {
   char path[128];
 } FAT_FILE_DESCRIPTOR;
 
-#define FILES_LIMIT 10
 static FAT_FILE_DESCRIPTOR file_descriptor_table[FILES_LIMIT];
-static uint16_t rom_fat[5120]; /* TODO: dynamic memory allocation */
-static FAT_ROOT_DIRECTORY_ENTRY rom_root_dir[224];
-
-static FAT_BPB *drive_bpb[26];
-static FAT_ROOT_DIRECTORY_ENTRY *drive_root_dir[26];
-static uint16_t *drive_fat[26];
-
-#define SECTOR_OFFSET(data, bytes_per_sector, num) ( (char *)data+(bytes_per_sector*(num)) )
+static FAT_BPB *drive_bpb[DRIVES_LIMIT];
+static FAT_ROOT_DIRECTORY_ENTRY *drive_root_dir[DRIVES_LIMIT];
+static uint16_t *drive_fat[DRIVES_LIMIT];
 
 void FAT_BootROM();
-void FAT_ReadBPB(FAT_BPB *bpb, DRIVE_LETTER drive, char *data);
+void FAT_ReadBPB(DRIVE_LETTER drive, char *data);
 void FAT_PrintBPBInfo(DRIVE_LETTER drive);
-void FAT_DecodeFAT12FAT(char *sector, uint16_t *decoded_fat);
-void FAT_DumpRootDirectory(DRIVE_LETTER drive, FAT_ROOT_DIRECTORY_ENTRY *dir_list, char *sector);
+void FAT_DecodeFAT12FAT(DRIVE_LETTER drive, char *sector);
+void FAT_DumpRootDirectory(DRIVE_LETTER drive, char *sector);
 
 FAT_ROOT_DIRECTORY_ENTRY *FAT_SearchRootDirectory(FAT_ROOT_DIRECTORY_ENTRY *root_dir, char *filename);
 
@@ -99,7 +100,7 @@ uint32_t FAT_OffsetDataStart(FAT_BPB *bpb);
 uint32_t FAT_ClusterSize(FAT_BPB *bpb);
 
 /* File manipulation routines. */
-uint16_t FAT_OpenFile(char *path, FAT_FILE_FLAGS mode);
+int16_t FAT_OpenFile(char *path, FAT_FILE_FLAGS mode);
 int16_t FAT_ReadFile(FAT_BPB *bpb, uint16_t fd_id, char *buffer, uint32_t bytes);
 int16_t FAT_ReadCluster(DRIVE_LETTER drive, uint32_t cluster_num, char *buffer, uint32_t bytes);
 FAT_FILE_DESCRIPTOR * FAT_GetUnusedFileDescriptor();

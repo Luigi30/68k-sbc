@@ -20,9 +20,6 @@ uint32_t get_swapped_long(uint8_t *location)
 
 void FAT_BootROM()
 {
-  FAT_BPB *rom_bpb = MEMMGR_NewPtr(sizeof(FAT_BPB));
-  printf("rom_bpb: %x\n", rom_bpb);
-
   // Clear all drive letters.
   for(int i=0; i<26; i++)
 	drive_bpb[i] = NULL;
@@ -36,32 +33,29 @@ void FAT_BootROM()
   
   /* Identify the disk at ROMFS_START. */
   char buffer[64];
-  int bootstrap = (MMIO32(P_ROMDISK) >> 8);
+  int bootstrap = ROMDiskBase >> 8;
   itoa(bootstrap, buffer, 16);
   printf("\n");
 
-  FAT_ReadBPB(rom_bpb, DRIVE_R, (char *)P_ROMDISK);
+  FAT_ReadBPB(DRIVE_R, (char *)ROMDiskBase);
   FAT_PrintBPBInfo(DRIVE_R);
 
-  drive_bpb[DRIVE_R] = rom_bpb;
-  drive_fat[DRIVE_R] = rom_fat;
-  drive_root_dir[DRIVE_R] = rom_root_dir;
+  drive_root_dir[DRIVE_R] = MEMMGR_NewPtr(sizeof(FAT_ROOT_DIRECTORY_ENTRY) *
+										  drive_bpb[DRIVE_R]->root_directory_entries);
 
   for(int i=0;i<drive_bpb[DRIVE_R]->root_directory_entries;i++)
 	{
-	  rom_root_dir[i].allocation_or_first_letter = 0x00;
-	  rom_root_dir[i].filename[0] = 0x00;
+	  drive_root_dir[DRIVE_R][i].allocation_or_first_letter = 0x00;
+	  drive_root_dir[DRIVE_R][i].filename[0] = 0x00;
 	}
   
   char sector_decoded_buffer[drive_bpb[DRIVE_R]->bytes_per_sector];
     
   /* Read a 10-sector FAT12 FAT. */
-  FAT_DecodeFAT12FAT((char *)(P_ROMDISK+FAT_OffsetFATStart(drive_bpb[DRIVE_R])),
-					 rom_fat);
-  printf("FAT: Read FAT12 FAT into memory at %06X\n", &rom_fat);
+  FAT_DecodeFAT12FAT(DRIVE_R, (char *)(ROMDiskBase+FAT_OffsetFATStart(drive_bpb[DRIVE_R])));
+  printf("FAT: Read FAT12 FAT into memory at %06X\n", drive_fat[DRIVE_R]);
 
   FAT_DumpRootDirectory(DRIVE_R,
-						drive_root_dir[DRIVE_R],
 						(char *)(0x80000 + FAT_OffsetRootDirStart(drive_bpb[DRIVE_R])));
 
   printf("ROM drive is open as R:\n");
@@ -69,7 +63,7 @@ void FAT_BootROM()
   // Try to open and read ASCII.TXT.
   char file_to_open[] = "R:\\ASCII.TXT";
   printf("Trying to open file %s.\n", file_to_open);
-  uint16_t fd = FAT_OpenFile("R:\\ASCII.TXT", FILE_FLAG_READ);
+  int16_t fd = FAT_OpenFile("R:\\ASCII.TXT", FILE_FLAG_READ);
   printf("Got file descriptor %d\n", fd);
 
   uint32_t file_size = file_descriptor_table[fd].root_dir_entry->file_size;
@@ -81,9 +75,9 @@ void FAT_BootROM()
   printf("\n*** Print Complete ***\n");
 }
 
-//void FAT_ReadBPB(FAT_BPB *bpb, char *data)
-void FAT_ReadBPB(FAT_BPB *bpb, DRIVE_LETTER drive, char *data)
+void FAT_ReadBPB(DRIVE_LETTER drive, char *data)
 {
+  FAT_BPB *bpb = MEMMGR_NewPtr(sizeof(FAT_BPB));
   drive_bpb[drive] = bpb;
   
   bpb->bytes_per_sector = get_swapped_word(data+11);
@@ -148,12 +142,14 @@ void FAT_PrintBPBInfo(DRIVE_LETTER drive)
 	printf("No extended BPB field signature\n");
 }
 
-void FAT_DecodeFAT12FAT(char *sector, uint16_t *decoded_fat)
+void FAT_DecodeFAT12FAT(DRIVE_LETTER drive, char *sector)
 {
   /* Decodes one sector from a disk.
 	 Expects a pointer to a sector. */
 
   /* TODO: more than 512 bytes per sector */
+  uint16_t *decoded_fat = MEMMGR_NewPtr(sizeof(uint16_t)*1024);
+  drive_fat[drive] = decoded_fat;
 
   for(int i=0; i<(512/3)*FAT12_FAT_SECTOR_COUNT; i++)
 	{
@@ -173,9 +169,10 @@ void FAT_DecodeFAT12FAT(char *sector, uint16_t *decoded_fat)
 	}
 }
 
-void FAT_DumpRootDirectory(DRIVE_LETTER drive, FAT_ROOT_DIRECTORY_ENTRY *dir_list, char *first_sector)
+void FAT_DumpRootDirectory(DRIVE_LETTER drive, char *first_sector)
 {
   FAT_BPB *bpb = drive_bpb[drive];
+  FAT_ROOT_DIRECTORY_ENTRY *dir_list = drive_root_dir[drive];
   
   /* Endianness... */
   printf("*** ROOT DIRECTORY ***\n");
@@ -214,7 +211,7 @@ void FAT_DumpRootDirectory(DRIVE_LETTER drive, FAT_ROOT_DIRECTORY_ENTRY *dir_lis
 	}  
 }
 
-uint16_t FAT_OpenFile(char *path, FAT_FILE_FLAGS mode)
+int16_t FAT_OpenFile(char *path, FAT_FILE_FLAGS mode)
 {
   FAT_FILE_DESCRIPTOR *fd = FAT_GetUnusedFileDescriptor();
 
@@ -223,7 +220,7 @@ uint16_t FAT_OpenFile(char *path, FAT_FILE_FLAGS mode)
   else
 	return FAT_ERROR_INVALID_FILE_MODE;
 
-  fd->root_dir_entry = FAT_SearchRootDirectory(rom_root_dir, path+3);
+  fd->root_dir_entry = FAT_SearchRootDirectory(drive_root_dir[path[0]-0x41], path+3);
 
   strcpy(fd->path, path);
   
@@ -264,7 +261,7 @@ int16_t FAT_ReadFile(FAT_BPB *bpb, uint16_t fd_id, char *buffer, uint32_t bytes)
 		 file_descriptor.path[0],
 		 filename);
   
-  FAT_ROOT_DIRECTORY_ENTRY *root_entry = FAT_SearchRootDirectory(rom_root_dir, filename);
+  FAT_ROOT_DIRECTORY_ENTRY *root_entry = FAT_SearchRootDirectory(drive_root_dir[file_descriptor.path[0]-0x41], filename);
   if(root_entry == NULL) {
 	printf("FAT_ReadFile: failed to find file %s in root directory\n", filename);
 	return FAT_ERROR_FILE_NOT_FOUND;
@@ -282,7 +279,6 @@ int16_t FAT_ReadFile(FAT_BPB *bpb, uint16_t fd_id, char *buffer, uint32_t bytes)
   int32_t bytes_remaining = bytes;
   int32_t bytes_to_read = 0;
   
-  //TODO: generalize for any drive letter
   uint16_t cluster_to_read = root_entry->first_cluster_low;
 
   while(1)
@@ -299,7 +295,7 @@ int16_t FAT_ReadFile(FAT_BPB *bpb, uint16_t fd_id, char *buffer, uint32_t bytes)
 	  if(bytes_remaining <= 0)
 		break;
 	  
-	  cluster_to_read = rom_fat[cluster_to_read];
+	  cluster_to_read = drive_fat[drive_id][cluster_to_read];
 	  if((cluster_to_read & 0xFF8) == 0xFF8)
 		break;
 	}
@@ -397,9 +393,9 @@ int16_t FAT_ReadCluster(DRIVE_LETTER drive, uint32_t cluster_num, char *buffer, 
 	  uint32_t data_offset = FAT_OffsetDataStart(bpb);
 	  uint32_t cluster_start_offset = FAT_ClusterSize(bpb) * cluster_num;
 		  
-	  char *data_ptr = (unsigned char *)(ROM_DRIVE_START +
-												  data_offset +
-												  cluster_start_offset);
+	  char *data_ptr = (unsigned char *)(ROMDiskBase +
+										 data_offset +
+										 cluster_start_offset);
 	  for(int i=0;i<bytes;i++)
 		{
 		  buffer[i] = data_ptr[i];
