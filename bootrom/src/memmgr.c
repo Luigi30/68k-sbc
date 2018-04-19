@@ -1,62 +1,82 @@
 #include "memmgr.h"
 
-MEMMGR_BLOCK *system_heap_blocks = NULL;
+Heap heap_system;
+Heap heap_application;
 
-CPTR system_heap_start;
-CPTR system_heap_end;
-
-CPTR master_pointer_list[MASTER_POINTER_COUNT];
+CPTR system_pointer_list[MASTER_POINTER_COUNT];
+CPTR application_pointer_list[MASTER_POINTER_COUNT];
 
 void MEMMGR_Initialize()
 {
-  system_heap_start = (CPTR)0x104000;
-  system_heap_end = (CPTR)0x114000;
+  SysHeap = 0x104000;
+  SysHeapEnd = 0x114000;
+
+  ApplHeap = 0x1C0000;
+  ApplHeapEnd = 0x1FFF00;
 
   printf("MEMMGR_Initialize()\n");
   
   // Create a master block at system_heap_start. It's free real estate!
-  MEMMGR_BLOCK *master_block = system_heap_start;
-  master_block->next = NULL;
-  master_block->previous = NULL;
-  master_block->size = (uint32_t)system_heap_end - (uint32_t)system_heap_start;
-  master_block->flags = MEMMGR_BLOCK_FLAG_FREE;
-  master_block->destination = (CPTR)((uint32_t)(system_heap_start)+sizeof(MEMMGR_BLOCK));
+  MEMMGR_BLOCK *system_master_block = (MEMMGR_BLOCK *)SysHeap;
+  system_master_block->next = NULL;
+  system_master_block->previous = NULL;
+  system_master_block->size = (uint32_t)SysHeapEnd - (uint32_t)SysHeap;
+  system_master_block->flags = MEMMGR_BLOCK_FLAG_FREE;
+  system_master_block->destination = (CPTR)((uint32_t)(SysHeap)+sizeof(MEMMGR_BLOCK));
+  heap_system.next = NULL;
+  heap_system.previous = NULL;
+  heap_system.master_pointers = system_pointer_list;
+  heap_system.size = (uint32_t)SysHeapEnd - (uint32_t)SysHeap;
+  heap_system.blocks = system_master_block;  
 
-  printf("System heap size is %06x\n", master_block->size);
-  printf("System heap location: $%06X-$%06X\n", system_heap_start, system_heap_end);
+  printf("System heap size is %06x\n", system_master_block->size);
+  printf("System heap location: $%06X-$%06X\n", SysHeap, SysHeapEnd);
 
-  system_heap_blocks = master_block;
+  // Application heap
+  MEMMGR_BLOCK *application_master_block = (MEMMGR_BLOCK *)ApplHeap;
+  application_master_block->next = NULL;
+  application_master_block->previous = NULL;
+  application_master_block->size = (uint32_t)ApplHeapEnd - (uint32_t)ApplHeap;
+  application_master_block->flags = MEMMGR_BLOCK_FLAG_FREE;
+  application_master_block->destination = (CPTR)((uint32_t)(ApplHeap)+sizeof(MEMMGR_BLOCK));
+  heap_application.next = NULL;
+  heap_application.previous = NULL;
+  heap_application.master_pointers = application_pointer_list;
+  heap_application.size = (uint32_t)ApplHeapEnd - (uint32_t)ApplHeap;
+  heap_application.blocks = application_master_block;
 
-  for(int i=0;i<512;i++)
+  for(int i=0;i<MASTER_POINTER_COUNT;i++)
 	{
-	  master_pointer_list[i] = 0x0;
+	  heap_system.master_pointers[i] = NULL;
+	  heap_application.master_pointers[i] = NULL;
 	}
+  
 }
 
-CPTR MEMMGR_NewPtr(uint32_t requested_size)
+CPTR MEMMGR_NewPtr(Heap *heap, uint32_t requested_size)
 {
   printf("MEMMGR_NewPtr: Requested a %d byte block\n", requested_size);
-  CPTR block = MEMMGR_AllocateBlock(requested_size, MEMMGR_BLOCK_FLAG_FIXED);
+  CPTR block = MEMMGR_AllocateBlock(heap, requested_size, MEMMGR_BLOCK_FLAG_FIXED);
 
   // Return the block's data area
   return (char *)(block) + 20;
 }
 
-int MEMMGR_DisposePtr(CPTR p)
+int MEMMGR_DisposePtr(Heap *heap, CPTR p)
 {
-  MEMMGR_FreeBlock(p);
+  MEMMGR_FreeBlock(heap, p);
 
   return 0;
 }
 
-HANDLE MEMMGR_NewHandle(uint32_t requested_size)
+HANDLE MEMMGR_NewHandle(Heap *heap, uint32_t requested_size)
 {
   printf("MEMMGR_NewHandle: Requested a %d byte block\n", requested_size);
-  CPTR block = MEMMGR_AllocateBlock(requested_size, MEMMGR_BLOCK_FLAG_NONE);
+  CPTR block = MEMMGR_AllocateBlock(heap, requested_size, MEMMGR_BLOCK_FLAG_NONE);
   printf("MEMMGR_NewHandle: Got block $%06X\n", block);
   
   // Add the block to the master pointer list.
-  CPTR master = MEMMGR_GetUnusedMasterPointer();
+  CPTR master = MEMMGR_GetUnusedMasterPointer(heap);
   printf("MEMMGR_NewHandle: Using master pointer at %06X\n", master);
   MMIO32((uint32_t)master) = (uint32_t)block+20;
 
@@ -64,11 +84,11 @@ HANDLE MEMMGR_NewHandle(uint32_t requested_size)
   return master; 
 }
 
-CPTR MEMMGR_AllocateBlock(uint32_t requested_size, MEMMGR_BLOCK_FLAGS flags)
+CPTR MEMMGR_AllocateBlock(Heap *heap, uint32_t requested_size, MEMMGR_BLOCK_FLAGS flags)
 {
   uint32_t adjusted_size = (requested_size + MEMMGR_BLOCK_HEADER_SIZE + 4) & 0xFFFFFFF0;
 
-  MEMMGR_BLOCK *block = system_heap_blocks;
+  MEMMGR_BLOCK *block = heap->blocks;
 
   // Find a free block that's big enough.
   while(block != NULL)
@@ -112,7 +132,7 @@ CPTR MEMMGR_AllocateBlock(uint32_t requested_size, MEMMGR_BLOCK_FLAGS flags)
 		  block->size = adjusted_size;
 		  block->flags = flags;
 
-		  MEMMGR_DumpSystemHeapBlocks();
+		  MEMMGR_DumpHeapBlocks(&heap_system);
 		  return block;
 		  
 		}
@@ -126,8 +146,9 @@ CPTR MEMMGR_AllocateBlock(uint32_t requested_size, MEMMGR_BLOCK_FLAGS flags)
   return NULL;
 }
 
-int MEMMGR_DisposeHandle(HANDLE h)
+int MEMMGR_DisposeHandle(Heap *heap, HANDLE h)
 {
+  //TODO: check if address is actually inside the heap
   uint32_t *block = (uint32_t *)(((uint8_t *)*h) - 20);
   printf("MEMMGR_DisposeHandle: freeing block at $%06X. block starts at $%06X\n", *h, block);
   block[3] = MEMMGR_BLOCK_FLAG_FREE;
@@ -135,14 +156,15 @@ int MEMMGR_DisposeHandle(HANDLE h)
   return 0;
 }
 
-void MEMMGR_FreeBlock(CPTR block)
+void MEMMGR_FreeBlock(Heap *heap, CPTR block)
 {
+  //TODO: check if the address is actually inside the heap
   ((uint32_t *)block)[3] = MEMMGR_BLOCK_FLAG_FREE;
 }
 
-void MEMMGR_DumpSystemHeapBlocks()
+void MEMMGR_DumpHeapBlocks(Heap *heap)
 {
-  MEMMGR_BLOCK *block = system_heap_blocks;
+  MEMMGR_BLOCK *block = heap->blocks;
 
   printf("*** DumpSystemHeapBlocks ***\n");
   while(block != NULL)
@@ -159,14 +181,14 @@ void MEMMGR_DumpSystemHeapBlocks()
   printf("*** DumpSystemHeapBlocks end ***\n");
 }
 
-CPTR MEMMGR_GetUnusedMasterPointer()
+CPTR MEMMGR_GetUnusedMasterPointer(Heap *heap)
 {
   printf("MEMMGR: Master pointer list is $%06X, searching for unused master pointer\n",
-		 master_pointer_list);
+		 heap->master_pointers);
   for(int i=0;i<MASTER_POINTER_COUNT;i++)
 	{
-	  if(master_pointer_list[i] == NULL)
-		return &(master_pointer_list[i]);
+	  if(heap->master_pointers[i] == NULL)
+		return &(heap->master_pointers[i]);
 	}
 }
 

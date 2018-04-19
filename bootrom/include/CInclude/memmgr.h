@@ -32,24 +32,35 @@ typedef struct memmgr_block_t
   CPTR destination;
 } MEMMGR_BLOCK;
 
-extern MEMMGR_BLOCK *system_heap_blocks;
+typedef struct memmgr_heap_t
+{
+  struct memmgr_heap_t *next;
+  struct memmgr_heap_t *previous;
+  CPTR *master_pointers;
+  uint32_t size;
+  MEMMGR_BLOCK *blocks;
+} Heap;
 
-#define MASTER_POINTER_COUNT 512
-extern CPTR master_pointer_list[MASTER_POINTER_COUNT];
+extern Heap heap_system;
+extern Heap heap_application;
+
+//extern MEMMGR_BLOCK *system_heap_blocks;
+
+#define MASTER_POINTER_COUNT 256
 
 void MEMMGR_Init();
 
-HANDLE MEMMGR_NewHandle(uint32_t size);
-int MEMMGR_DisposeHandle(HANDLE h);
+HANDLE MEMMGR_NewHandle(Heap *heap, uint32_t size);
+int MEMMGR_DisposeHandle(Heap *heap, HANDLE h);
 
-CPTR MEMMGR_NewPtr(uint32_t requested_size);
-int MEMMGR_DisposePtr(CPTR p);
+CPTR MEMMGR_NewPtr(Heap *heap, uint32_t requested_size);
+int MEMMGR_DisposePtr(Heap *heap, CPTR p);
 
-CPTR MEMMGR_AllocateBlock(uint32_t requested_size, MEMMGR_BLOCK_FLAGS flags);
-void MEMMGR_FreeBlock(CPTR block);
+CPTR MEMMGR_AllocateBlock(Heap *heap, uint32_t requested_size, MEMMGR_BLOCK_FLAGS flags);
+void MEMMGR_FreeBlock(Heap *heap, CPTR block);
 
-void MEMMGR_DumpSystemHeapBlocks();
-CPTR MEMMGR_GetUnusedMasterPointer();
+void MEMMGR_DumpHeapBlocks(Heap *heap);
+CPTR MEMMGR_GetUnusedMasterPointer(Heap *heap);
 
 void *MEMMGR_GetBlockForHandle(HANDLE h);
 

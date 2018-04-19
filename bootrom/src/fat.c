@@ -40,7 +40,8 @@ void FAT_BootROM()
   FAT_ReadBPB(DRIVE_R, (char *)ROMDiskBase);
   FAT_PrintBPBInfo(DRIVE_R);
 
-  drive_root_dir[DRIVE_R] = MEMMGR_NewPtr(sizeof(FAT_ROOT_DIRECTORY_ENTRY) *
+  drive_root_dir[DRIVE_R] = MEMMGR_NewPtr(&heap_system,
+										  sizeof(FAT_ROOT_DIRECTORY_ENTRY) *
 										  drive_bpb[DRIVE_R]->root_directory_entries);
 
   for(int i=0;i<drive_bpb[DRIVE_R]->root_directory_entries;i++)
@@ -67,7 +68,7 @@ void FAT_BootROM()
   printf("Got file descriptor %d\n", fd);
 
   uint32_t file_size = file_descriptor_table[fd].root_dir_entry->file_size;
-  HANDLE file_data = MEMMGR_NewHandle(file_size+1);
+  HANDLE file_data = MEMMGR_NewHandle(&heap_system, file_size+1);
   FAT_ReadFile(drive_bpb[DRIVE_R], fd, *file_data, file_size);
 
   printf("\n*** Printing File ***\n");
@@ -77,7 +78,7 @@ void FAT_BootROM()
 
 void FAT_ReadBPB(DRIVE_LETTER drive, char *data)
 {
-  FAT_BPB *bpb = MEMMGR_NewPtr(sizeof(FAT_BPB));
+  FAT_BPB *bpb = MEMMGR_NewPtr(&heap_system, sizeof(FAT_BPB));
   drive_bpb[drive] = bpb;
   
   bpb->bytes_per_sector = get_swapped_word(data+11);
@@ -148,7 +149,7 @@ void FAT_DecodeFAT12FAT(DRIVE_LETTER drive, char *sector)
 	 Expects a pointer to a sector. */
 
   /* TODO: more than 512 bytes per sector */
-  uint16_t *decoded_fat = MEMMGR_NewPtr(sizeof(uint16_t)*1024);
+  uint16_t *decoded_fat = MEMMGR_NewPtr(&heap_system, sizeof(uint16_t)*1024);
   drive_fat[drive] = decoded_fat;
 
   for(int i=0; i<(512/3)*FAT12_FAT_SECTOR_COUNT; i++)

@@ -103,7 +103,7 @@ void Monitor_ProcessEntry()
   else if(inputBuffer[0] == CMD_ROMBOOT)
 	{
 	  serial_string_out("ROM BOOT\n");
-	  MEMMGR_DumpSystemHeapBlocks();
+	  MEMMGR_DumpHeapBlocks(&heap_system);
 	  FAT_BootROM();
 	}
   else
