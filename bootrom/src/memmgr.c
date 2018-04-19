@@ -128,7 +128,7 @@ CPTR MEMMGR_AllocateBlock(uint32_t requested_size, MEMMGR_BLOCK_FLAGS flags)
 
 int MEMMGR_DisposeHandle(HANDLE h)
 {
-  long *block = (long *)(((char *)*h) - 20);
+  uint32_t *block = (uint32_t *)(((uint8_t *)*h) - 20);
   printf("MEMMGR_DisposeHandle: freeing block at $%06X. block starts at $%06X\n", *h, block);
   block[3] = MEMMGR_BLOCK_FLAG_FREE;
   
@@ -137,7 +137,7 @@ int MEMMGR_DisposeHandle(HANDLE h)
 
 void MEMMGR_FreeBlock(CPTR block)
 {
-  ((long *)block)[3] = MEMMGR_BLOCK_FLAG_FREE;
+  ((uint32_t *)block)[3] = MEMMGR_BLOCK_FLAG_FREE;
 }
 
 void MEMMGR_DumpSystemHeapBlocks()
@@ -176,7 +176,7 @@ int MEMMGR_LockHandle(HANDLE h)
   if(*h == NULL)
 	return MEMMGR_ERR_NULL_HANDLE;
 
-  long *block = (long *)MEMMGR_GetBlockForHandle(h);
+  uint32_t *block = (uint32_t *)MEMMGR_GetBlockForHandle(h);
 
   // Is this a handle to a freed block?
   if((block[3] & MEMMGR_BLOCK_FLAG_FREE) == MEMMGR_BLOCK_FLAG_FREE)
@@ -193,7 +193,7 @@ int MEMMGR_UnlockHandle(HANDLE h)
   if(*h == NULL)
 	return MEMMGR_ERR_NULL_HANDLE;
 
-  long *block = (long *)MEMMGR_GetBlockForHandle(h);
+  int32_t *block = (int32_t *)MEMMGR_GetBlockForHandle(h);
 
   // Is this a handle to a freed block?
   if((block[3] & MEMMGR_BLOCK_FLAG_FREE) == MEMMGR_BLOCK_FLAG_FREE)
