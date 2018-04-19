@@ -23,6 +23,8 @@ typedef enum memmgr_block_flags_t {
 #define MEMMGR_BLOCK_OFFSET_SIZE     -8
 #define MEMMGR_BLOCK_OFFSET_FLAGS    -4
 
+#define MASTER_POINTER_COUNT 256
+
 typedef struct memmgr_block_t
 {
   struct memmgr_block_t *next;
@@ -44,10 +46,6 @@ typedef struct memmgr_heap_t
 extern Heap heap_system;
 extern Heap heap_application;
 
-//extern MEMMGR_BLOCK *system_heap_blocks;
-
-#define MASTER_POINTER_COUNT 256
-
 void MEMMGR_Init();
 
 HANDLE MEMMGR_NewHandle(Heap *heap, uint32_t size);
@@ -63,6 +61,8 @@ void MEMMGR_DumpHeapBlocks(Heap *heap);
 CPTR MEMMGR_GetUnusedMasterPointer(Heap *heap);
 
 void *MEMMGR_GetBlockForHandle(HANDLE h);
+
+void MEMMGR_CombineFreeBlocks(Heap *heap);
 
 /* memory manager errors */
 #define MEMMGR_ERR_NONE 0

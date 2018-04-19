@@ -16,7 +16,18 @@ void Monitor_Go()
   Monitor_InitPrompt();
 
   printf("Boot ROM: Executing OSFunc $A001\n");
-  DoLineATest();
+
+  //Memory test.
+  HANDLE hndl1 = MEMMGR_NewHandle(&heap_system, 1024);
+  HANDLE hndl2 = MEMMGR_NewHandle(&heap_system, 2048);
+  HANDLE hndl3 = MEMMGR_NewHandle(&heap_system, 4096);
+  HANDLE hndl4 = MEMMGR_NewHandle(&heap_system, 8192);
+
+  MEMMGR_DisposeHandle(&heap_system, hndl4);
+
+  MEMMGR_DumpHeapBlocks(&heap_system);
+  MEMMGR_CombineFreeBlocks(&heap_system);
+  MEMMGR_DumpHeapBlocks(&heap_system);
   
   while(TRUE)
 	{

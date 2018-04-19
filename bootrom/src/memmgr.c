@@ -73,11 +73,11 @@ HANDLE MEMMGR_NewHandle(Heap *heap, uint32_t requested_size)
 {
   printf("MEMMGR_NewHandle: Requested a %d byte block\n", requested_size);
   CPTR block = MEMMGR_AllocateBlock(heap, requested_size, MEMMGR_BLOCK_FLAG_NONE);
-  printf("MEMMGR_NewHandle: Got block $%06X\n", block);
+  //printf("MEMMGR_NewHandle: Got block $%06X\n", block);
   
   // Add the block to the master pointer list.
   CPTR master = MEMMGR_GetUnusedMasterPointer(heap);
-  printf("MEMMGR_NewHandle: Using master pointer at %06X\n", master);
+  //printf("MEMMGR_NewHandle: Using master pointer at %06X\n", master);
   MMIO32((uint32_t)master) = (uint32_t)block+20;
 
   // Pointer to the master pointer list entry is a handle.
@@ -93,12 +93,6 @@ CPTR MEMMGR_AllocateBlock(Heap *heap, uint32_t requested_size, MEMMGR_BLOCK_FLAG
   // Find a free block that's big enough.
   while(block != NULL)
 	{
-	  printf("block at $%06X: points to %06X, %d bytes. free? %d\n",
-			 block,
-			 block->destination,
-			 block->size,
-			 (block->flags & MEMMGR_BLOCK_FLAG_FREE) == 0x04);
-
 	  if((uint32_t)block->previous > RAMEnd ||
 		 (uint32_t)block->next > RAMEnd ||
 		 (uint32_t)block->destination > RAMEnd)
@@ -183,9 +177,7 @@ void MEMMGR_DumpHeapBlocks(Heap *heap)
 
 CPTR MEMMGR_GetUnusedMasterPointer(Heap *heap)
 {
-  printf("MEMMGR: Master pointer list is $%06X, searching for unused master pointer\n",
-		 heap->master_pointers);
-  for(int i=0;i<MASTER_POINTER_COUNT;i++)
+   for(int i=0;i<MASTER_POINTER_COUNT;i++)
 	{
 	  if(heap->master_pointers[i] == NULL)
 		return &(heap->master_pointers[i]);
@@ -227,4 +219,34 @@ int MEMMGR_UnlockHandle(HANDLE h)
 void * MEMMGR_GetBlockForHandle(HANDLE h)
 {
   return (void *)(((char *)*h) - 20);
+}
+
+void MEMMGR_CombineFreeBlocks(Heap *heap)
+{
+  printf("MEMMGR: Looking for adjacent free blocks.\n");
+
+  MEMMGR_BLOCK *block = heap->blocks;
+
+  while(block != NULL)
+	{
+	  if((block->flags & MEMMGR_BLOCK_FLAG_FREE) == MEMMGR_BLOCK_FLAG_FREE)
+		{
+		  //This is a free block. Is the next block free?
+		  if((block->next->flags & MEMMGR_BLOCK_FLAG_FREE) == MEMMGR_BLOCK_FLAG_FREE)
+			{
+			  //Yes. Combine the two blocks, then invalidate any handles to the disposed block.
+			  printf("MEMMGR: Combining blocks $%06X and $%06X\n",
+					 block,
+					 block->next);
+			  block->size = block->size + block->next->size;
+
+			  //Remove the next block from the list.
+			  block->next = block->next->next;
+			  if(block->next != NULL)
+				block->next->previous = block;
+			}
+		}
+	  
+	  block = block->next;
+	}
 }
