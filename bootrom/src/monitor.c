@@ -8,27 +8,11 @@ char STR_BootBanner[] = "Procyon 68000 ROM Monitor - 2018-04-17";
 char STR_CRLF[] = "\r\n";
 char STR_CommandPrompt[] = "> ";
 
-extern void DoLineATest();
-
 void Monitor_Go()
 {  
   Monitor_DrawBanner();
   Monitor_InitPrompt();
 
-  printf("Boot ROM: Executing OSFunc $A001\n");
-
-  //Memory test.
-  HANDLE hndl1 = MEMMGR_NewHandle(&heap_system, 1024);
-  HANDLE hndl2 = MEMMGR_NewHandle(&heap_system, 2048);
-  HANDLE hndl3 = MEMMGR_NewHandle(&heap_system, 4096);
-  HANDLE hndl4 = MEMMGR_NewHandle(&heap_system, 8192);
-
-  MEMMGR_DisposeHandle(&heap_system, hndl4);
-
-  MEMMGR_DumpHeapBlocks(&heap_system);
-  MEMMGR_CombineFreeBlocks(&heap_system);
-  MEMMGR_DumpHeapBlocks(&heap_system);
-  
   while(TRUE)
 	{
 	  Monitor_WaitForEntry();
@@ -84,6 +68,7 @@ void Monitor_ClearPromptBuffer()
 #define CMD_SETMEM 's'
 #define CMD_DUMPMEM 'd'
 #define CMD_ROMBOOT 'b'
+#define CMD_RUNELF 'x'
 
 void Monitor_ProcessEntry()
 {
@@ -117,8 +102,31 @@ void Monitor_ProcessEntry()
 	  MEMMGR_DumpHeapBlocks(&heap_system);
 	  FAT_BootROM();
 	}
+  else if(inputBuffer[0] == CMD_RUNELF)
+	{
+	  serial_string_out("RUN ELF\n");
+	  RunELF("R:\\TEST.ELF");
+	}
   else
 	{
 	  serial_string_out("Invalid command");
 	}
+}
+
+void RunELF(char *path)
+{
+  FAT_MountDrive(DRIVE_R);
+
+  int fd = FAT_OpenFile(path, FILE_FLAG_READ);
+  uint32_t file_size = 600; //TODO: FAT_GetFileSize(fd);
+  HANDLE file_data = MEMMGR_NewHandle(file_size+1, H_SYSHEAP);
+  
+  FAT_ReadFile(drive_bpb[DRIVE_R],
+			   fd,
+			   *file_data,
+			   file_size);
+
+  //TODO: ELF loader
+  //TODO: create an application heap
+  //TODO: execute ELF
 }

@@ -53,24 +53,31 @@ void MEMMGR_Initialize()
   
 }
 
-CPTR MEMMGR_NewPtr(Heap *heap, uint32_t requested_size)
+CPTR MEMMGR_NewPtr(uint32_t requested_size, MEMMGR_MALLOC_FLAGS flags)
 {
   printf("MEMMGR_NewPtr: Requested a %d byte block\n", requested_size);
+
+  Heap *heap;
+  heap = (flags & H_SYSHEAP) == H_SYSHEAP ? &heap_system : &heap_application;
+  
   CPTR block = MEMMGR_AllocateBlock(heap, requested_size, MEMMGR_BLOCK_FLAG_FIXED);
 
   // Return the block's data area
   return (char *)(block) + 20;
 }
 
-int MEMMGR_DisposePtr(Heap *heap, CPTR p)
+int MEMMGR_DisposePtr(CPTR p)
 {
-  MEMMGR_FreeBlock(heap, p);
+  MEMMGR_FreeBlock(p);
 
   return 0;
 }
 
-HANDLE MEMMGR_NewHandle(Heap *heap, uint32_t requested_size)
+HANDLE MEMMGR_NewHandle(uint32_t requested_size, MEMMGR_MALLOC_FLAGS flags)
 {
+  Heap *heap;
+  heap = (flags & H_SYSHEAP) == H_SYSHEAP ? &heap_system : &heap_application;
+  
   printf("MEMMGR_NewHandle: Requested a %d byte block\n", requested_size);
   CPTR block = MEMMGR_AllocateBlock(heap, requested_size, MEMMGR_BLOCK_FLAG_NONE);
   //printf("MEMMGR_NewHandle: Got block $%06X\n", block);
@@ -140,9 +147,8 @@ CPTR MEMMGR_AllocateBlock(Heap *heap, uint32_t requested_size, MEMMGR_BLOCK_FLAG
   return NULL;
 }
 
-int MEMMGR_DisposeHandle(Heap *heap, HANDLE h)
+int MEMMGR_DisposeHandle(HANDLE h)
 {
-  //TODO: check if address is actually inside the heap
   uint32_t *block = (uint32_t *)(((uint8_t *)*h) - 20);
   printf("MEMMGR_DisposeHandle: freeing block at $%06X. block starts at $%06X\n", *h, block);
   block[3] = MEMMGR_BLOCK_FLAG_FREE;
@@ -150,9 +156,8 @@ int MEMMGR_DisposeHandle(Heap *heap, HANDLE h)
   return 0;
 }
 
-void MEMMGR_FreeBlock(Heap *heap, CPTR block)
+void MEMMGR_FreeBlock(CPTR block)
 {
-  //TODO: check if the address is actually inside the heap
   ((uint32_t *)block)[3] = MEMMGR_BLOCK_FLAG_FREE;
 }
 
@@ -247,6 +252,29 @@ void MEMMGR_CombineFreeBlocks(Heap *heap)
 			}
 		}
 	  
+	  block = block->next;
+	}
+}
+
+void MEMMGR_CompactHeap(Heap *heap)
+{
+  // Make all relocatable blocks as contiguous as possible.
+
+  // First, combine adjacent free blocks.
+  MEMMGR_CombineFreeBlocks(&heap);
+  
+  MEMMGR_BLOCK *block = heap->blocks;
+
+  while(block != NULL)
+	{
+	  if(block->flags & MEMMGR_BLOCK_FLAG_FIXED ||
+		 block->flags & MEMMGR_BLOCK_FLAG_LOCKED ||
+		 block->flags & MEMMGR_BLOCK_FLAG_FREE)
+		{
+		  continue; // do not relocate this block
+		}
+
+	  //TODO: compact the heap lol
 	  block = block->next;
 	}
 }

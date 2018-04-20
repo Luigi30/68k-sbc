@@ -13,7 +13,7 @@ extern long SysHeap;
 extern long SysHeapEnd;
 
 extern long ApplHeap;
-extern long ApplHeapEnd
+extern long ApplHeapEnd;
 
 extern long ROMBase;
 extern long ROMEnd;

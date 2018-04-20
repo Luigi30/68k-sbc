@@ -90,6 +90,7 @@ void FAT_ReadBPB(DRIVE_LETTER drive, char *data);
 void FAT_PrintBPBInfo(DRIVE_LETTER drive);
 void FAT_DecodeFAT12FAT(DRIVE_LETTER drive, char *sector);
 void FAT_DumpRootDirectory(DRIVE_LETTER drive, char *sector);
+void FAT_MountDrive(DRIVE_LETTER drive);
 
 FAT_ROOT_DIRECTORY_ENTRY *FAT_SearchRootDirectory(FAT_ROOT_DIRECTORY_ENTRY *root_dir, char *filename);
 

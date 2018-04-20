@@ -46,23 +46,31 @@ typedef struct memmgr_heap_t
 extern Heap heap_system;
 extern Heap heap_application;
 
+typedef enum {
+  H_CURHEAP = 0x00,
+  H_SYSHEAP = 0x01,
+  H_CLEAR   = 0x02,
+} MEMMGR_MALLOC_FLAGS;
+
 void MEMMGR_Init();
 
-HANDLE MEMMGR_NewHandle(Heap *heap, uint32_t size);
-int MEMMGR_DisposeHandle(Heap *heap, HANDLE h);
+HANDLE MEMMGR_NewHandle(uint32_t size, MEMMGR_MALLOC_FLAGS flags);
+int MEMMGR_DisposeHandle(HANDLE h);
 
-CPTR MEMMGR_NewPtr(Heap *heap, uint32_t requested_size);
-int MEMMGR_DisposePtr(Heap *heap, CPTR p);
+CPTR MEMMGR_NewPtr(uint32_t requested_size, MEMMGR_MALLOC_FLAGS flags);
+int MEMMGR_DisposePtr(CPTR p);
 
+// Internal functions.
 CPTR MEMMGR_AllocateBlock(Heap *heap, uint32_t requested_size, MEMMGR_BLOCK_FLAGS flags);
-void MEMMGR_FreeBlock(Heap *heap, CPTR block);
-
-void MEMMGR_DumpHeapBlocks(Heap *heap);
-CPTR MEMMGR_GetUnusedMasterPointer(Heap *heap);
+void MEMMGR_FreeBlock(CPTR block);
 
 void *MEMMGR_GetBlockForHandle(HANDLE h);
-
 void MEMMGR_CombineFreeBlocks(Heap *heap);
+
+
+// Debugging functions.
+void MEMMGR_DumpHeapBlocks(Heap *heap);
+CPTR MEMMGR_GetUnusedMasterPointer(Heap *heap);
 
 /* memory manager errors */
 #define MEMMGR_ERR_NONE 0
