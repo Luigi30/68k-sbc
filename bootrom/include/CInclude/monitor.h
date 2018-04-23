@@ -3,6 +3,7 @@
 
 #include "serial.h"
 #include "fat.h"
+#include "elf.h"
 #include "memmgr.h"
 
 void Monitor_DrawBanner();

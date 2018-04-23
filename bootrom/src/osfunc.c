@@ -1,4 +1,4 @@
-#include "traptest.h"
+#include "osfunc.h"
 
 void OSFunc_Test()
 {

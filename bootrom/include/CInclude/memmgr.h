@@ -9,6 +9,7 @@
 
 #define MEMMGR_BLOCK_HEADER_SIZE 20
 #define SYSTEM_HEAP_SIZE 65536
+#define APPLICATION_HEAP_SIZE 131072
 
 typedef enum memmgr_block_flags_t {
   MEMMGR_BLOCK_FLAG_NONE   = 0x00,
@@ -43,8 +44,9 @@ typedef struct memmgr_heap_t
   MEMMGR_BLOCK *blocks;
 } Heap;
 
-extern Heap heap_system;
-extern Heap heap_application;
+extern Heap heap_system; // MacOS: SysZone
+extern Heap heap_application; // MacOS: ApplZone
+extern Heap active_heap; // MacOS: TheZone
 
 typedef enum {
   H_CURHEAP = 0x00,

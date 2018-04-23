@@ -9,10 +9,10 @@ CPTR application_pointer_list[MASTER_POINTER_COUNT];
 void MEMMGR_Initialize()
 {
   SysHeap = 0x104000;
-  SysHeapEnd = 0x114000;
+  SysHeapEnd = SysHeap + SYSTEM_HEAP_SIZE;
 
-  ApplHeap = 0x1C0000;
   ApplHeapEnd = 0x1FFF00;
+  ApplHeap = ApplHeapEnd - APPLICATION_HEAP_SIZE;
 
   printf("MEMMGR_Initialize()\n");
   
@@ -32,7 +32,7 @@ void MEMMGR_Initialize()
   printf("System heap size is %06x\n", system_master_block->size);
   printf("System heap location: $%06X-$%06X\n", SysHeap, SysHeapEnd);
 
-  // Application heap
+  // Application heap (single-tasking)
   MEMMGR_BLOCK *application_master_block = (MEMMGR_BLOCK *)ApplHeap;
   application_master_block->next = NULL;
   application_master_block->previous = NULL;

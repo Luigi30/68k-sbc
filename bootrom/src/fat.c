@@ -21,7 +21,7 @@ uint32_t get_swapped_long(uint8_t *location)
 void FAT_MountDrive(DRIVE_LETTER drive)
 {
   FAT_ReadBPB(DRIVE_R, (char *)ROMDiskBase);
-  FAT_PrintBPBInfo(DRIVE_R);
+  //FAT_PrintBPBInfo(DRIVE_R);
 
   drive_root_dir[DRIVE_R] = MEMMGR_NewPtr(sizeof(FAT_ROOT_DIRECTORY_ENTRY) * drive_bpb[DRIVE_R]->root_directory_entries,
 										  H_SYSHEAP);
@@ -36,7 +36,7 @@ void FAT_MountDrive(DRIVE_LETTER drive)
     
   /* Read a 10-sector FAT12 FAT. */
   FAT_DecodeFAT12FAT(DRIVE_R, (char *)(ROMDiskBase+FAT_OffsetFATStart(drive_bpb[DRIVE_R])));
-  printf("FAT: Read FAT12 FAT into memory at %06X\n", drive_fat[DRIVE_R]);
+  //printf("FAT: Read FAT12 FAT into memory at %06X\n", drive_fat[DRIVE_R]);
 
   FAT_DumpRootDirectory(DRIVE_R,
 						(char *)(0x80000 + FAT_OffsetRootDirStart(drive_bpb[DRIVE_R])));
@@ -275,7 +275,7 @@ int16_t FAT_ReadFile(FAT_BPB *bpb, uint16_t fd_id, char *buffer, uint32_t bytes)
   // -1 = read to end
 
   // OK, where does this file start?
-  uint32_t cluster_size = FAT_ClusterSize(bpb);
+  uint32_t cluster_size = 1024;
   printf("FAT_ReadFile: file starts at cluster %d\n", root_entry->first_cluster_low);
   printf("FAT_ReadFile: file is %d bytes (%d clusters)\n",
 		 root_entry->file_size,
@@ -383,11 +383,12 @@ FAT_ROOT_DIRECTORY_ENTRY *FAT_SearchRootDirectory(FAT_ROOT_DIRECTORY_ENTRY *root
 
 int16_t FAT_ReadCluster(DRIVE_LETTER drive, uint32_t cluster_num, char *buffer, uint32_t bytes)
 {
+  
   printf("FAT_ReadCluster: Requested %d bytes of cluster %d from drive %c\n",
 		 bytes,
 		 cluster_num,
 		 FAT_DriveNumberToDriveLetter(drive));
-  printf("FAT_ReadCluster: Writing to buffer at %06X\n", buffer);
+  //printf("FAT_ReadCluster: Writing to buffer at %06X\n", buffer);
 
   FAT_BPB *bpb = drive_bpb[drive];
   
@@ -406,7 +407,7 @@ int16_t FAT_ReadCluster(DRIVE_LETTER drive, uint32_t cluster_num, char *buffer, 
 		  buffer[i] = data_ptr[i];
 		}
 
-	  printf("Read complete.\n");
+	  //printf("Read complete.\n");
 
 	  return FAT_ERROR_NONE;
 	}
@@ -442,6 +443,7 @@ uint32_t FAT_OffsetDataStart(FAT_BPB *bpb)
 
 uint32_t FAT_ClusterSize(FAT_BPB *bpb)
 {
+  //printf("cluster size is %d\n", bpb->sectors_per_cluster * bpb->bytes_per_sector);
   return bpb->sectors_per_cluster * bpb->bytes_per_sector;
 }
 

@@ -4,9 +4,9 @@
 int input_buffer_position = 0;
 
 char inputBuffer[INPUT_BUFFER_SIZE];
-char STR_BootBanner[] = "Procyon 68000 ROM Monitor - 2018-04-17";
-char STR_CRLF[] = "\r\n";
-char STR_CommandPrompt[] = "> ";
+const char STR_BootBanner[] = "Procyon 68000 ROM Monitor - 2018-04-17";
+const char STR_CRLF[] = "\r\n";
+const char STR_CommandPrompt[] = "> ";
 
 void Monitor_Go()
 {  
@@ -42,13 +42,20 @@ void Monitor_WaitForEntry()
 	if(serial_char_waiting())
 	  {
 		char incoming = serial_in();
-		inputBuffer[input_buffer_position++] = incoming;
-		serial_char_out(incoming);
 
-		if(incoming == 13)
+		if(incoming == 13) // CR
 		  {
 			waiting = FALSE;
 		  }
+		else if(incoming == 8)  // BS
+		  {
+			inputBuffer[input_buffer_position--] = 0x00;
+		  }
+		else {
+		  inputBuffer[input_buffer_position++] = incoming;
+		}
+
+		serial_char_out(incoming);
 	  }
   }
 }
@@ -118,8 +125,8 @@ void RunELF(char *path)
   FAT_MountDrive(DRIVE_R);
 
   int fd = FAT_OpenFile(path, FILE_FLAG_READ);
-  uint32_t file_size = 600; //TODO: FAT_GetFileSize(fd);
-  HANDLE file_data = MEMMGR_NewHandle(file_size+1, H_SYSHEAP);
+  uint32_t file_size = 8820; //TODO: FAT_GetFileSize(fd);
+  HANDLE file_data = MEMMGR_NewHandle(file_size+1);
   
   FAT_ReadFile(drive_bpb[DRIVE_R],
 			   fd,
@@ -127,6 +134,8 @@ void RunELF(char *path)
 			   file_size);
 
   //TODO: ELF loader
-  //TODO: create an application heap
+  ELF_LoadExecutable(*file_data);
+
   //TODO: execute ELF
+
 }
