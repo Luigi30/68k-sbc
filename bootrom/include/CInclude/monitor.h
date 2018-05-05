@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "serial.h"
+#include "devices/serial.h"
 #include "fat.h"
 #include "elf.h"
 #include "memmgr.h"

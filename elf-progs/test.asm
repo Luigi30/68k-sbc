@@ -5,7 +5,7 @@
 	public	_main
 	cnop	0,4
 _main
-	movem.l	l4,-(a7)
+	movem.l	l5,-(a7)
 	addq.l	#2,_x
 	subq.l	#2,_y
 	lea	l3,a0
@@ -13,10 +13,19 @@ _main
 	dc.w $A002
 	add.l #8,sp
 
+	move.l	#0,a1
+	lea	l4,a0
+	moveq	#0,d0
+	move.l a1,-(a7)
+ 	move.l a0,-(a7)
+ 	move.l d0,-(a7)
+ 	dc.w $A003
+ 	add.l #16,sp
+
 	moveq	#0,d0
 l1
-l4	reg
-l6	equ	0
+l5	reg
+l7	equ	0
 	rts
 	cnop	0,4
 l3
@@ -69,6 +78,14 @@ l3
 	dc.b	48
 	dc.b	46
 	dc.b	76
+	dc.b	10
+	dc.b	0
+	cnop	0,4
+l4
+	dc.b	116
+	dc.b	101
+	dc.b	115
+	dc.b	116
 	dc.b	10
 	dc.b	0
 	public	_x

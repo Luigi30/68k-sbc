@@ -416,8 +416,13 @@ int16_t FAT_ReadCluster(DRIVE_LETTER drive, uint32_t cluster_num, char *buffer, 
 	  //TODO: Read a sector into memory.
 	  printf("Non-ROM storage not yet supported.\n");
 	  return FAT_ERROR_FILE_NOT_FOUND;
-	}
-   
+	}   
+}
+
+/*****************************/
+uint32_t FAT_GetFileSize(int fd)
+{
+  return file_descriptor_table[fd].root_dir_entry->file_size;
 }
 
 /*****************************
@@ -443,7 +448,6 @@ uint32_t FAT_OffsetDataStart(FAT_BPB *bpb)
 
 uint32_t FAT_ClusterSize(FAT_BPB *bpb)
 {
-  //printf("cluster size is %d\n", bpb->sectors_per_cluster * bpb->bytes_per_sector);
   return bpb->sectors_per_cluster * bpb->bytes_per_sector;
 }
 

@@ -18,7 +18,7 @@ CINCLUDE = CInclude
 AINCLUDE = AInclude
 
 $(BINDIR)/bootrom.s68: $(OBJDIR)/crt0.o $(OBJDIR)/sysvars.o $(OBJDIR)/bootrom.o $(OBJDIR)/monitor.o $(OBJDIR)/romfs.o $(OBJDIR)/fat.o $(OBJDIR)/log.o \
-		       	$(OBJDIR)/memmgr.o $(OBJDIR)/dispatch.o $(OBJDIR)/osfunc.o $(OBJDIR)/elf.o ../libc/bin/libc68k.a
+		       	$(OBJDIR)/memmgr.o $(OBJDIR)/dispatch.o $(OBJDIR)/osfunc.o $(OBJDIR)/elf.o $(OBJDIR)/print.o $(OBJDIR)/vga.o ../libc/bin/libc68k.a
 	vlink $(LDFLAGS) -lc68k -o $(BINDIR)/bootrom.s68 $^
 	cp bin/bootrom.s68 /mnt/c/EASy68K/
 	m68k-atari-mint-objcopy -I srec -O binary $@ --pad-to=0x100000 /mnt/c/msys64/home/Luigi/mame/roms/luigisbc/68000.bin
@@ -72,6 +72,18 @@ $(OBJDIR)/elf.s: $(SRCDIR)/elf.c
 	$(CC) $(CFLAGS) -o=$@ $<
 
 $(OBJDIR)/elf.o: $(OBJDIR)/elf.s
+	$(AS) $(ASFLAGS) -Fvobj -o $@ $<
+
+$(OBJDIR)/print.s: $(SRCDIR)/print.c
+	$(CC) $(CFLAGS) -o=$@ $<
+
+$(OBJDIR)/print.o: $(OBJDIR)/print.s
+	$(AS) $(ASFLAGS) -Fvobj -o $@ $<
+
+$(OBJDIR)/vga.s: $(SRCDIR)/vga.c
+	$(CC) $(CFLAGS) -o=$@ $<
+
+$(OBJDIR)/vga.o: $(OBJDIR)/vga.s
 	$(AS) $(ASFLAGS) -Fvobj -o $@ $<
 
 ###############

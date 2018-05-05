@@ -12,7 +12,36 @@ void Monitor_Go()
 {  
   Monitor_DrawBanner();
   Monitor_InitPrompt();
+  
+  MMIO16(0x800000 + (0xA0001*2)) = 0x02;
+  //VGA_SetBitplaneWriteMask(0x01);
+  //  MMIO16(0x800000 + (0xB8000*2)) = 0x4141;
 
+  VGA_SetStandardPalette();
+  VGA_SetMode13h();
+
+  for(int i=0; i<10; i++)
+	{
+	  VGA_SetMode13Pixel(20, 20+i, 12);
+	}
+
+  for(int i=0; i<5; i++)
+	{
+	  VGA_SetMode13Pixel(20+i, 25, 12);
+	}
+
+  for(int i=0; i<5; i++)
+	{
+	  VGA_SetMode13Pixel(25, 25+i, 12);
+	}
+
+  for(int i=0; i<5; i++)
+	{
+	  VGA_SetMode13Pixel(30, 25+i, 13);
+	}
+
+  VGA_SetMode13Pixel(30, 22, 13);
+  
   while(TRUE)
 	{
 	  Monitor_WaitForEntry();
@@ -125,7 +154,7 @@ void RunELF(char *path)
   FAT_MountDrive(DRIVE_R);
 
   int fd = FAT_OpenFile(path, FILE_FLAG_READ);
-  uint32_t file_size = 8820; //TODO: FAT_GetFileSize(fd);
+  uint32_t file_size = FAT_GetFileSize(fd);
   HANDLE file_data = MEMMGR_NewHandle(file_size+1);
   
   FAT_ReadFile(drive_bpb[DRIVE_R],
@@ -133,9 +162,5 @@ void RunELF(char *path)
 			   *file_data,
 			   file_size);
 
-  //TODO: ELF loader
   ELF_LoadExecutable(*file_data);
-
-  //TODO: execute ELF
-
 }

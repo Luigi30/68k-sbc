@@ -2,7 +2,7 @@
 
 #include "procyon.h"
 #include "stdint.h"
-#include "serial.h"
+#include "devices/serial.h"
 #include "log.h"
 #include "memmgr.h"
 
@@ -99,6 +99,9 @@ uint32_t FAT_OffsetFATStart(FAT_BPB *bpb);
 uint32_t FAT_OffsetRootDirStart(FAT_BPB *bpb);
 uint32_t FAT_OffsetDataStart(FAT_BPB *bpb);
 uint32_t FAT_ClusterSize(FAT_BPB *bpb);
+
+/* File info. */
+uint32_t FAT_GetFileSize(int fd);
 
 /* File manipulation routines. */
 int16_t FAT_OpenFile(char *path, FAT_FILE_FLAGS mode);
