@@ -5,6 +5,7 @@
 #include "fat.h"
 #include "elf.h"
 #include "memmgr.h"
+#include "fastdraw.h"
 
 void Monitor_DrawBanner();
 void Monitor_InitPrompt();

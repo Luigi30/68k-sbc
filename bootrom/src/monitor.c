@@ -12,36 +12,34 @@ void Monitor_Go()
 {  
   Monitor_DrawBanner();
   Monitor_InitPrompt();
-  
-  MMIO16(0x800000 + (0xA0001*2)) = 0x02;
-  //VGA_SetBitplaneWriteMask(0x01);
-  //  MMIO16(0x800000 + (0xB8000*2)) = 0x4141;
 
+  VGA_SetMode(VGA_MODE_12h);
   VGA_SetStandardPalette();
-  VGA_SetMode13h();
-
-  for(int i=0; i<10; i++)
-	{
-	  VGA_SetMode13Pixel(20, 20+i, 12);
-	}
-
-  for(int i=0; i<5; i++)
-	{
-	  VGA_SetMode13Pixel(20+i, 25, 12);
-	}
-
-  for(int i=0; i<5; i++)
-	{
-	  VGA_SetMode13Pixel(25, 25+i, 12);
-	}
-
-  for(int i=0; i<5; i++)
-	{
-	  VGA_SetMode13Pixel(30, 25+i, 13);
-	}
-
-  VGA_SetMode13Pixel(30, 22, 13);
+  VGA_SetWriteMode(2);
+  VGA_SetBitplaneWriteMask(0x0F);
+  //DRAW_SetLogicalMode(DRAW_ModeOR);
   
+  VGA_ChainPlanes();
+  
+  Rectangle r;
+  DRAW_SetPenFore(0x0F);
+  DRAW_SetRectangle(&r, 50, 50, 40, 40);
+  DRAW_DrawRectangle(&r);
+
+  VGA_SetPixel(0, 0, 0x0F);
+  for(int i=0;i<10;i++){
+	VGA_SetPixel(40+i, 40, 0x01 | 0x02 | 0x04 | 0x08);
+  }
+
+  int ptr = 0;
+  for(int row=256+127; row>=256; row--)
+	{
+	  for(int column=0+256; column<128+256; column++)
+		{
+		  VGA_SetPixel(0+column, 0+row, BITMAP_PolluxVGA[ptr++]);
+		}
+	}
+
   while(TRUE)
 	{
 	  Monitor_WaitForEntry();
