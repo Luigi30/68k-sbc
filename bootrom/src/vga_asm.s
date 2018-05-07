@@ -3,9 +3,9 @@
 
 	code
 
-VGA_MODE_80x25 = 0
-VGA_MODE_12h = 1
-VGA_MODE_13h = 2
+VGA_MODE_80x25 = $03
+VGA_MODE_12h = $12
+VGA_MODE_13h = $13
 
 	even
 _VGA_SetPixel:
@@ -29,7 +29,8 @@ _VGA_SetMode12Pixel:
 	move.w	#$80,d4
 	lsr		d3,d4
 	move.w	d4,(a0)
-	
+
+	;; load the X and Y coords for calculation of offset
 	move.w	d1,d3
 	ext.l	d3
 	move.w	d1,d4
@@ -51,7 +52,8 @@ _VGA_SetMode12Pixel:
 	add.l	#$A0000,d3
 	asl.l	#1,d3
 	add.l	d3,a0
-	
+
+	;; read to set the latches, then write to update VRAM
 	move.b	(a0),d4
 	move.b	d2,(a0)
 

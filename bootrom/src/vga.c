@@ -242,21 +242,6 @@ void VGA_SetMode13h()
   VGA_SetBitplaneWriteMask(0x0F);
 }
 
-/*
-void VGA_SetPixel(uint16_t x, uint16_t y, uint8_t color)
-{
-  switch(VGA_MODE)
-	{
-	case VGA_MODE_12h:
-	  VGA_SetMode12Pixel(x, y, color);
-	  break;
-	case VGA_MODE_13h:
-	  VGA_SetMode13Pixel(x, y, color);
-	  break;
-	};
-}
-*/
-
 void VGA_SetWriteMode(int mode)
 {
   MMIO16(VGA_IO_ADDRESS(0x3CE)) = 0x05;
@@ -323,4 +308,17 @@ void VGA_UnchainPlanes()
 {
   MMIO16(VGA_IO_ADDRESS(0x3C4)) = 0x04;
   MMIO16(VGA_IO_ADDRESS(0x3C5)) = MMIO16(VGA_IO_ADDRESS(0x3C5)) & ~0x04;
+}
+
+void VGA_PutBitmap(uint8_t *bitmap, uint16_t x, uint16_t y, uint16_t size_x, uint16_t size_y)
+{
+  int ptr = 0;
+  
+  for(int row = y+size_y; row > y; row--)
+	{
+	  for(int column=x; column < x+size_x; column++)
+		{
+		  VGA_SetPixel(column, row, bitmap[ptr++]);
+		}
+	}
 }

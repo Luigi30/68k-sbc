@@ -13,12 +13,11 @@ void Monitor_Go()
   Monitor_DrawBanner();
   Monitor_InitPrompt();
 
-  VGA_SetMode(VGA_MODE_12h);
+  DRAW_SetVGAMode(VGA_MODE_12h);
+  //VGA_SetMode(VGA_MODE_12h);
   VGA_SetStandardPalette();
   VGA_SetWriteMode(2);
   VGA_SetBitplaneWriteMask(0x0F);
-  //DRAW_SetLogicalMode(DRAW_ModeOR);
-  
   VGA_ChainPlanes();
   
   Rectangle r;
@@ -31,14 +30,7 @@ void Monitor_Go()
 	VGA_SetPixel(40+i, 40, 0x01 | 0x02 | 0x04 | 0x08);
   }
 
-  int ptr = 0;
-  for(int row=256+127; row>=256; row--)
-	{
-	  for(int column=0+256; column<128+256; column++)
-		{
-		  VGA_SetPixel(0+column, 0+row, BITMAP_PolluxVGA[ptr++]);
-		}
-	}
+  VGA_PutBitmap(BITMAP_PolluxVGA, 256, 256, 128, 128);
 
   while(TRUE)
 	{
