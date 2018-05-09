@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "procyon.h"
 #include "vga.h"
@@ -34,6 +35,7 @@ typedef struct drawport_t {
 
 static DrawPort screenPort; // TODO: can we move the base address of the VGA screen?
                             // If so, abolish this and make it dynamic.
+
 typedef enum {
   DRAW_ModeReplace = 0x00,
   DRAW_ModeAND = 0x08,
@@ -58,5 +60,6 @@ void DRAW_SetLogicalMode(DRAW_LogicalMode);
 void DRAW_SetRectangle(Rectangle *r, uint16_t, uint16_t, uint16_t, uint16_t);
 void DRAW_DrawRectangle(Rectangle *r);
 
-
+void DRAW_PutFontGlyph(VGA_Font *font, uint8_t code, uint16_t dest_x, uint16_t dest_y);
+void DRAW_PutString(uint8_t *str, VGA_Font *font, uint16_t dest_x, uint16_t dest_y);
 #endif

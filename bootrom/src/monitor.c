@@ -13,24 +13,57 @@ void Monitor_Go()
   Monitor_DrawBanner();
   Monitor_InitPrompt();
 
-  DRAW_SetVGAMode(VGA_MODE_12h);
-  //VGA_SetMode(VGA_MODE_12h);
+  DRAW_SetVGAMode(VGA_MODE_2Eh);
   VGA_SetStandardPalette();
-  VGA_SetWriteMode(2);
-  VGA_SetBitplaneWriteMask(0x0F);
-  VGA_ChainPlanes();
+  //VGA_SetWriteMode(2);
+  //VGA_SetBitplaneWriteMask(0x0F);
+  //VGA_ChainPlanes();
   
   Rectangle r;
   DRAW_SetPenFore(0x0F);
   DRAW_SetRectangle(&r, 50, 50, 40, 40);
   DRAW_DrawRectangle(&r);
 
+  VGA_Font fixedsys12;
+  fixedsys12.bitmap.data = BITMAP_Fixedsys12;
+  fixedsys12.bitmap.size_x = 256;
+  fixedsys12.bitmap.size_y = 256;
+  fixedsys12.bitmap.vram_ptr = 0;
+  fixedsys12.glyph_x = 10;
+  fixedsys12.glyph_y = 16;
+
+  VGA_Font F_8bitpusab12;
+  F_8bitpusab12.bitmap.data = BITMAP_8bitpusab12;
+  F_8bitpusab12.bitmap.size_x = 256;
+  F_8bitpusab12.bitmap.size_y = 256;
+  F_8bitpusab12.bitmap.vram_ptr = 0;
+  F_8bitpusab12.glyph_x = 10;
+  F_8bitpusab12.glyph_y = 16;
+
+  VGA_Bitmap PolluxVGA;
+  PolluxVGA.data = BITMAP_PolluxVGA;
+  PolluxVGA.size_x = 128;
+  PolluxVGA.size_y = 128;
+  PolluxVGA.vram_ptr = 0;
+  
   VGA_SetPixel(0, 0, 0x0F);
   for(int i=0;i<10;i++){
 	VGA_SetPixel(40+i, 40, 0x01 | 0x02 | 0x04 | 0x08);
   }
 
-  VGA_PutBitmap(BITMAP_PolluxVGA, 256, 256, 128, 128);
+  VGA_PutBitmap(&PolluxVGA, 0, 256, 0, 0, 128, 128, BITMAP_FLIP_Y);
+  //VGA_PutBitmap(&fixedsys12, 400, 300, 0, 0, 256, 256);
+  //VGA_PutBitmap(&fixedsys12, 0, 384, 0, 0, 248, 256);
+  //DRAW_PutFontGlyph(&fixedsys12, 'A', 384, 384);
+  //DRAW_PutString("Hello! I present really slow text printing.", &fixedsys12, 0, 0);
+  //DRAW_PutString("With multiple fonts!", &F_8bitpusab12, 0, 16);
+
+  for(int column=0; column<120; column++)
+	{
+	  for(int i=0;i<column;i++)
+		VGA_SetPixel(column, 0+i, 0xFF);
+
+	}
 
   while(TRUE)
 	{

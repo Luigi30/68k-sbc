@@ -51,6 +51,8 @@ void VGA_SetMode(enum VGA_Mode mode)
 	case VGA_MODE_13h:
 	  VGA_SetMode13h();
 	  break;
+	case VGA_MODE_2Eh:
+	  VGA_SetMode2Eh();
 	}
 }
 
@@ -242,6 +244,64 @@ void VGA_SetMode13h()
   VGA_SetBitplaneWriteMask(0x0F);
 }
 
+void VGA_SetMode2Eh()
+{
+  // Set VGA to Mode 2Eh (640x480 linear)
+  MMIO16(VGA_IO_ADDRESS(0x3C2)) = 0xE3;
+  
+  int temp;
+  temp = MMIO16(VGA_IO_ADDRESS(0x3D0)); // reset to index mode
+
+  //
+  VGA_SetControllerRegister(0x3C0, 0x3C0, 0x10, 0x01);
+  VGA_SetControllerRegister(0x3C0, 0x3C0, 0x11, 0x00);
+  VGA_SetControllerRegister(0x3C0, 0x3C0, 0x12, 0x0F);
+  VGA_SetControllerRegister(0x3C0, 0x3C0, 0x13, 0x00);
+  VGA_SetControllerRegister(0x3C0, 0x3C0, 0x14, 0x00);
+  
+  //
+  VGA_SetControllerRegister(0x3C4, 0x3C5, 0x00, 0x03);
+  VGA_SetControllerRegister(0x3C4, 0x3C5, 0x01, 0x01);
+  VGA_SetControllerRegister(0x3C4, 0x3C5, 0x02, 0x0F);
+  VGA_SetControllerRegister(0x3C4, 0x3C5, 0x03, 0x00);
+  VGA_SetControllerRegister(0x3C4, 0x3C5, 0x04, 0x0E);
+  VGA_SetControllerRegister(0x3C4, 0x3C5, 0x06, 0x00);
+  VGA_SetControllerRegister(0x3C4, 0x3C5, 0x07, 0xBC);
+
+  //
+  VGA_SetControllerRegister(0x3CE, 0x3CF, 0x05, 0x40);
+  VGA_SetControllerRegister(0x3CE, 0x3CF, 0x06, 0x15);
+  VGA_SetControllerRegister(0x3CE, 0x3CF, 0x07, 0x0F);
+  VGA_SetControllerRegister(0x3CE, 0x3CF, 0x08, 0xFF);
+
+  //
+  VGA_SetControllerRegister(0x3D4, 0x3D5, 0x00, 0x5F);
+  VGA_SetControllerRegister(0x3D4, 0x3D5, 0x01, 0x4F);
+  VGA_SetControllerRegister(0x3D4, 0x3D5, 0x02, 0x50);
+  VGA_SetControllerRegister(0x3D4, 0x3D5, 0x03, 0x82);
+  VGA_SetControllerRegister(0x3D4, 0x3D5, 0x04, 0x54);
+  VGA_SetControllerRegister(0x3D4, 0x3D5, 0x05, 0x80);
+  VGA_SetControllerRegister(0x3D4, 0x3D5, 0x06, 0x0B);
+  VGA_SetControllerRegister(0x3D4, 0x3D5, 0x07, 0x3E);
+  VGA_SetControllerRegister(0x3D4, 0x3D5, 0x08, 0x00);
+  VGA_SetControllerRegister(0x3D4, 0x3D5, 0x09, 0x40);
+  VGA_SetControllerRegister(0x3D4, 0x3D5, 0x10, 0xEA);
+  VGA_SetControllerRegister(0x3D4, 0x3D5, 0x11, 0x8C);
+  VGA_SetControllerRegister(0x3D4, 0x3D5, 0x12, 0xDF);
+  VGA_SetControllerRegister(0x3D4, 0x3D5, 0x13, 0x50);
+  VGA_SetControllerRegister(0x3D4, 0x3D5, 0x14, 0x60);
+  VGA_SetControllerRegister(0x3D4, 0x3D5, 0x15, 0xE7);
+  VGA_SetControllerRegister(0x3D4, 0x3D5, 0x16, 0x04);
+  VGA_SetControllerRegister(0x3D4, 0x3D5, 0x17, 0xAB);
+  VGA_SetControllerRegister(0x3C4, 0x3C5, 0x18, 0xFF);
+
+  MMIO16(VGA_IO_ADDRESS(0x3D4)) = 0x24;
+  MMIO16(VGA_IO_ADDRESS(0x3D5)) = 0x10;
+  MMIO16(VGA_IO_ADDRESS(0x3D4)) = 0x00;
+  
+  VGA_SetBitplaneWriteMask(0x0F);
+}
+
 void VGA_SetWriteMode(int mode)
 {
   MMIO16(VGA_IO_ADDRESS(0x3CE)) = 0x05;
@@ -280,9 +340,14 @@ void VGA_SetStandardPalette()
   VGA_SetDMAColor(63, 21, 63);
   VGA_SetDMAColor(63, 63, 21);
   VGA_SetDMAColor(63, 63, 63);
+
+  for(int i=0;i<240; i++)
+	{
+	  VGA_SetDMAColor(63, 63, 63);
+	}
   
   // Set 16 palette entries.
-  for(int i=0; i<16; i++)
+  for(int i=0; i<256; i++)
 	{
 	  int discard = MMIO16(VGA_IO_ADDRESS(0x3DA));
 	  MMIO16(VGA_IO_ADDRESS(0x3C0)) = i;
@@ -310,15 +375,34 @@ void VGA_UnchainPlanes()
   MMIO16(VGA_IO_ADDRESS(0x3C5)) = MMIO16(VGA_IO_ADDRESS(0x3C5)) & ~0x04;
 }
 
-void VGA_PutBitmap(uint8_t *bitmap, uint16_t x, uint16_t y, uint16_t size_x, uint16_t size_y)
+void VGA_PutBitmap(VGA_Bitmap *bitmap, uint16_t dest_x, uint16_t dest_y, uint16_t source_x, uint16_t source_y, uint16_t size_x, uint16_t size_y, BITMAP_FLAGS flags)
 {
-  int ptr = 0;
-  
-  for(int row = y+size_y; row > y; row--)
+  uint32_t ptr = 0;
+  uint16_t add_after_scanline = bitmap->size_x - size_x;
+
+  uint16_t offset = (bitmap->size_x * source_y) + source_x;
+  uint8_t *pixels = bitmap->data + offset;
+
+  if(flags & BITMAP_FLIP_Y)
 	{
-	  for(int column=x; column < x+size_x; column++)
+	  for(int row = dest_y+size_y; row > dest_y; row--)
 		{
-		  VGA_SetPixel(column, row, bitmap[ptr++]);
+		  for(int column=dest_x; column < dest_x+size_x; column++)
+			{
+			  VGA_SetPixel(column, row, pixels[ptr++]);
+			}
+		  ptr += add_after_scanline;
+		}
+	}
+  else
+	{
+	  for(int row = dest_y; row < dest_y+size_y; row++)
+		{
+		  for(int column=dest_x; column < dest_x+size_x; column++)
+			{
+			  VGA_SetPixel(column, row, pixels[ptr++]);
+			}
+		  ptr += add_after_scanline;
 		}
 	}
 }

@@ -26,6 +26,12 @@ void DRAW_SetVGAMode(VGA_Mode mode)
 	  screenPort.size.y = 200;
 	  screenPort.depth = DEPTH_CHUNKY;
 	  break;
+	case 0x2E:
+	  screenPort.vram_base = (char *)0xA0000;
+	  screenPort.size.x = 640;
+	  screenPort.size.y = 480;
+	  screenPort.depth = DEPTH_CHUNKY;
+	  break;
 	}
 }
 
@@ -67,3 +73,16 @@ void DRAW_MovePen(Point p)
   penLocation.y = p.y;
 }
 
+void DRAW_PutFontGlyph(VGA_Font *font, uint8_t code, uint16_t dest_x, uint16_t dest_y)
+{
+  VGA_PutBitmap(font, dest_x, dest_y, (code * 16) % 256, code & 0xF0, 16, 16);
+}
+
+void DRAW_PutString(uint8_t *str, VGA_Font *font, uint16_t dest_x, uint16_t dest_y)
+{
+  for(int i=0; i<strlen(str); i++)
+	{
+	  DRAW_PutFontGlyph(font, str[i], dest_x, dest_y);
+	  dest_x += font->glyph_x;
+	}
+}
