@@ -1,6 +1,7 @@
 #ifndef PROCYON_H__
 #define PROCYON_H__
 
+#include "dma.h"
 #include "mmio.h"
 #include "types.h"
 

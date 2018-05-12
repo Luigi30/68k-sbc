@@ -3,6 +3,7 @@
 
 #include "procyon.h"
 #include <stdint.h>
+#include <stdio.h>
 
 #define ISA_VGA_IOBASE 0xFA0000
 #define ISA_VGA_MEMBASE 0x800000
@@ -15,6 +16,11 @@ typedef enum vga_mode_t {
   VGA_MODE_13h = 0x13,
   VGA_MODE_2Eh = 0x2E
 } VGA_Mode;
+
+typedef struct {
+  uint16_t size_x, size_y;
+} VGA_ModeInfo;
+static VGA_ModeInfo VGA_MODEINFO;
 
 typedef struct {
   uint8_t *data;     //pointer to start of bitmap in work RAM.
@@ -49,6 +55,7 @@ void VGA_SetMode(enum VGA_Mode);
 void VGA_Set80x25Mode();
 void VGA_SetMode12h();
 void VGA_SetMode13h();
+void VGA_SetMode2Eh();
 
 extern void VGA_SetPixel(__reg("d0") uint16_t, __reg("d1") uint16_t, __reg("d2") uint8_t);
 extern void VGA_SetMode12Pixel(__reg("d0") uint16_t, __reg("d1") uint16_t, __reg("d2") uint8_t);

@@ -147,6 +147,9 @@ void VGA_Set80x25Mode()
 
   MMIO16(VGA_IO_ADDRESS(0x3D4)) = 0x17;
   MMIO16(VGA_IO_ADDRESS(0x3D5)) = 0xA3;
+
+  VGA_MODEINFO.size_x = 80;
+  VGA_MODEINFO.size_y = 25;
 }
 
 void VGA_SetMode12h()
@@ -193,6 +196,9 @@ void VGA_SetMode12h()
   VGA_SetControllerRegister(0x3D4, 0x3D5, 0x15, 0xE7);
   VGA_SetControllerRegister(0x3D4, 0x3D5, 0x16, 0x04);
   VGA_SetControllerRegister(0x3D4, 0x3D5, 0x17, 0xE3);  
+
+  VGA_MODEINFO.size_x = 640;
+  VGA_MODEINFO.size_y = 480;
 }
 
 void VGA_SetMode13h()
@@ -242,6 +248,9 @@ void VGA_SetMode13h()
 
   // Writes go to all bitplanes.
   VGA_SetBitplaneWriteMask(0x0F);
+
+  VGA_MODEINFO.size_x = 320;
+  VGA_MODEINFO.size_y = 200;
 }
 
 void VGA_SetMode2Eh()
@@ -300,6 +309,9 @@ void VGA_SetMode2Eh()
   MMIO16(VGA_IO_ADDRESS(0x3D4)) = 0x00;
   
   VGA_SetBitplaneWriteMask(0x0F);
+
+  VGA_MODEINFO.size_x = 640;
+  VGA_MODEINFO.size_y = 480;
 }
 
 void VGA_SetWriteMode(int mode)
@@ -381,28 +393,65 @@ void VGA_PutBitmap(VGA_Bitmap *bitmap, uint16_t dest_x, uint16_t dest_y, uint16_
   uint16_t add_after_scanline = bitmap->size_x - size_x;
 
   uint16_t offset = (bitmap->size_x * source_y) + source_x;
-  uint8_t *pixels = bitmap->data + offset;
+  //uint8_t *pixels = bitmap->data + offset;
+  
+  uint16_t destination_add_after_scanline;
+  uint32_t destination_offset;
+  int16_t bytes_left_in_scanline = size_x;
 
-  if(flags & BITMAP_FLIP_Y)
+  //destination_offset = dest_y*VGA_MODEINFO.size_x + dest_x;
+  destination_offset = 0;
+  destination_add_after_scanline = VGA_MODEINFO.size_x - size_x;
+  
+  printf("bytes to copy: %x\n", size_y * size_x);
+  printf("destination_add_after_scanline: %d\n", destination_add_after_scanline);
+  
+  if(VGA_MODE == VGA_MODE_12h)
 	{
-	  for(int row = dest_y+size_y; row > dest_y; row--)
+	  uint8_t *pixels = bitmap->data + offset;
+	  if(flags & BITMAP_FLIP_Y)
 		{
-		  for(int column=dest_x; column < dest_x+size_x; column++)
+		  for(int row = dest_y+size_y; row > dest_y; row--)
 			{
-			  VGA_SetPixel(column, row, pixels[ptr++]);
+			  for(int column=dest_x; column < dest_x+size_x; column++)
+				{
+				  VGA_SetPixel(column, row, pixels[ptr++]);
+				}
+			  ptr += add_after_scanline;
 			}
-		  ptr += add_after_scanline;
+		}
+	  else
+		{
+		  uint8_t *pixels = bitmap->data + offset;
+		  for(int row = dest_y; row < dest_y+size_y; row++)
+			{
+			  for(int column=dest_x; column < dest_x+size_x; column++)
+				{
+				  VGA_SetPixel(column, row, pixels[ptr++]);
+				}
+			  ptr += add_after_scanline;
+			}
 		}
 	}
-  else
+  else if(VGA_MODE == VGA_MODE_13h || VGA_MODE == VGA_MODE_2Eh)
 	{
-	  for(int row = dest_y; row < dest_y+size_y; row++)
+	  uint16_t *pixels = bitmap->data + offset;
+	  printf("source ptr: %x\n", pixels);
+
+	  // These are chunky modes, do a direct copy.
+	  printf("Performing chunky copy\n");
+	  for(uint32_t words_to_copy = (size_y * size_x) >> 1; words_to_copy != 0; words_to_copy--)
 		{
-		  for(int column=dest_x; column < dest_x+size_x; column++)
+		  MMIO16(0x900000 + destination_offset) = pixels[ptr++]; // iterate by words, not bytes
+		  destination_offset += 2;
+		  bytes_left_in_scanline -= 2;
+		  
+		  if(bytes_left_in_scanline <= 0)
 			{
-			  VGA_SetPixel(column, row, pixels[ptr++]);
+			  bytes_left_in_scanline = size_x;
+			  ptr += (add_after_scanline);
+			  destination_offset += (destination_add_after_scanline);
 			}
-		  ptr += add_after_scanline;
 		}
 	}
 }

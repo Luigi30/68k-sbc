@@ -1,5 +1,7 @@
 #include "monitor.h"
 
+DMA_ChainBlock DMA_Chain[500];
+
 #define INPUT_BUFFER_SIZE 256
 int input_buffer_position = 0;
 
@@ -8,11 +10,16 @@ const char STR_BootBanner[] = "Procyon 68000 ROM Monitor - 2018-04-17";
 const char STR_CRLF[] = "\r\n";
 const char STR_CommandPrompt[] = "> ";
 
+DrawPort *currentPort;
+
 void Monitor_Go()
 {  
   Monitor_DrawBanner();
   Monitor_InitPrompt();
 
+  // temporary
+  screenPort.vram_base = (uint8_t *)0x900000;
+  currentPort = &screenPort;
   DRAW_SetVGAMode(VGA_MODE_2Eh);
   VGA_SetStandardPalette();
   //VGA_SetWriteMode(2);
@@ -23,6 +30,7 @@ void Monitor_Go()
   DRAW_SetPenFore(0x0F);
   DRAW_SetRectangle(&r, 50, 50, 40, 40);
   DRAW_DrawRectangle(&r);
+  DRAW_PutPixel(256, 256);
 
   VGA_Font fixedsys12;
   fixedsys12.bitmap.data = BITMAP_Fixedsys12;
@@ -32,6 +40,12 @@ void Monitor_Go()
   fixedsys12.glyph_x = 10;
   fixedsys12.glyph_y = 16;
 
+  DRAW_PutFontGlyph(fixedsys12.bitmap.data, 256, 256, 'A');
+  for(int i=0;i<16;i++)
+	{
+	  DRAW_PutString("Hello World!", &fixedsys12, 0, i<<4);
+	}
+  
   VGA_Font F_8bitpusab12;
   F_8bitpusab12.bitmap.data = BITMAP_8bitpusab12;
   F_8bitpusab12.bitmap.size_x = 256;
@@ -46,24 +60,38 @@ void Monitor_Go()
   PolluxVGA.size_y = 128;
   PolluxVGA.vram_ptr = 0;
   
-  VGA_SetPixel(0, 0, 0x0F);
+  //VGA_SetPixel(0, 0, 0x0F);
   for(int i=0;i<10;i++){
 	VGA_SetPixel(40+i, 40, 0x01 | 0x02 | 0x04 | 0x08);
   }
 
-  VGA_PutBitmap(&PolluxVGA, 0, 256, 0, 0, 128, 128, BITMAP_FLIP_Y);
+  /*
+  //Let's do a DMA transfer!
+  //MMIO32(DMA_MAR(0)) = (uint32_t)fixedsys12.bitmap.data;
+  MMIO32(DMA_DAR(0)) = 0x100000;
+  //MMIO16(DMA_MTCR(0)) = 128*256; // in words
+  MMIO8(DMA_DCR(0)) = DMA_XRM_BURST | DMA_DPS_16 | DMA_DTYP_ACK;
+  //MMIO8(DMA_OCR(0)) = DMA_SIZE_WORD | DMA_CHAIN_NONE | DMA_DIR_M2D;
+  MMIO8(DMA_OCR(0)) = DMA_SIZE_WORD | DMA_CHAIN_ARRAY | DMA_DIR_M2D;
+  MMIO8(DMA_SCR(0)) = DMA_MAC_UP | DMA_DAC_UP;
+  MMIO32(DMA_BAR(0)) = (uint32_t)DMA_Chain;
+  MMIO16(DMA_BTCR(0)) = 256;
+
+  for(int i=0;i<256;i++)
+	{
+	  DMA_Chain[i].source = (uint8_t *)fixedsys12.bitmap.data + (i << 8);
+	  DMA_Chain[i].transfer_count = 128;
+	}
+
+  MMIO8(DMA_CCR(0)) = DMA_STR_START;
+  */
+  
+  //VGA_PutBitmap(&PolluxVGA, 0, 256, 0, 0, 128, 128, BITMAP_FLIP_Y);
   //VGA_PutBitmap(&fixedsys12, 400, 300, 0, 0, 256, 256);
-  //VGA_PutBitmap(&fixedsys12, 0, 384, 0, 0, 248, 256);
+  //VGA_PutBitmap(&fixedsys12, 0, 0, 0, 0, 256, 256, BITMAP_NONE);
   //DRAW_PutFontGlyph(&fixedsys12, 'A', 384, 384);
   //DRAW_PutString("Hello! I present really slow text printing.", &fixedsys12, 0, 0);
   //DRAW_PutString("With multiple fonts!", &F_8bitpusab12, 0, 16);
-
-  for(int column=0; column<120; column++)
-	{
-	  for(int i=0;i<column;i++)
-		VGA_SetPixel(column, 0+i, 0xFF);
-
-	}
 
   while(TRUE)
 	{
