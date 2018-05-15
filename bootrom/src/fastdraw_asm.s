@@ -1,5 +1,9 @@
 	public _DRAW_PutPixel
 	public _DRAW_PutFontGlyph
+	public _DRAW_LineTo
+	
+	include	"c_types.i"
+	include "fastdraw/types.i"
 	
 	code
 
@@ -10,22 +14,24 @@ DRAWPORT_depth = 8
 DRAWPORT_SIZE = 10
 
 _DRAW_PutPixel:
-	;; d0.w = X
-	;; d1.w = Y
-	ext.l	d0
-	ext.l	d1
-	
+	;; d0.l = X
+	;; d1.l = Y
+	move.l	4(sp),d0
+	move.l	8(sp),d1
+
+	move.l	d2,-(sp)
+
 	move.l	_currentPort,a0
+	move.w	DRAWPORT_size_x(a0),d2
 	move.l	DRAWPORT_vram_base(a0),a0
 	
-	move.l	_currentPort+DRAWPORT_size_x,d2
 	mulu	d1,d2
 	add.l	d0,d2
 	add.l	d2,a0
 	;; a0 is now the pixel address
-	
 	move.b	_pen_fore,(a0)
 
+	move.l	(sp)+,d2
 	rts
 
 _DRAW_PutFontGlyph:
@@ -78,4 +84,103 @@ ColumnLoop:
 	move.w	#15,d7
 	dbra.w	d6,RowLoop
 	
+	rts
+
+_DRAW_LineTo:
+	;; d0.w = x1
+	;; d1.w = y1
+
+	LINK	a6,#-8
+	move.w	d0,a1			; a1 = x2
+	move.w	d1,a2			; a2 = y2
+	
+	move.l	#_penLocation,a5
+	move.w	FDPoint_X(a5),d2	; d2 = penLocation.X
+	move.w	FDPoint_Y(a5),d3	; d3 = penLocation.Y
+
+	move.w	d0,d4
+	move.w	d1,d5
+	sub.w	d2,d4 				; d4 = deltaX
+	sub.w	d3,d5				; d5 = deltaY
+
+	;; calculate the signs of deltaX and deltaY
+.checkDeltaX:
+	tst.w	d4
+	bpl.w	.checkDeltaY
+	neg.w	d4
+	ext.l	d4
+
+.checkDeltaY:
+	tst.w	d5
+	bmi.w	.checkAddX
+	neg.w	d5
+	ext.l	d5
+
+	;; calculate addX and addY
+.checkAddX:
+	cmp.w	d2,d0
+	bhi.w	.xIsPositive
+.xIsNegative:
+	move.w	#-1,d2
+	bra		.checkAddY
+.xIsPositive:
+	move.w	#1,d2
+
+.checkAddY:
+	cmp.w	d3,d1
+	ble.w	.yIsNegative
+.yIsPositive:
+	move.w	#1,d3
+	bra		.calcError
+.yIsNegative:
+	move.w	#-1,d3
+
+	;; error = d7
+	;; error2 = d6
+.calcError:
+	move.w	d4,d7
+	add.w	d5,d7
+	
+	;; the while loop
+	;; this is fucked up...
+.drawLinePixel:
+	move.w	FDPoint_X(a5),d0
+	move.w	FDPoint_Y(a5),d1
+	
+	move.l	d1,-(sp)
+	move.l	d0,-(sp)
+	jsr		_DRAW_PutPixel
+	move.l	(sp)+,d0
+	move.l	(sp)+,d1
+
+.checkX:						
+	cmp.w	d0,a1				; x1 == x2?
+	bne		.nextPixel
+.checkY:
+	cmp.w	d1,a2				; y1 == y2?
+	beq		.done
+
+.nextPixel:
+	move.w	d7,d6
+	asl.w	#1,d6				; d6 = error2
+
+.checkErrorY:
+	;; if error2 >= deltaY
+	cmp.w	d5,d6
+	blt		.checkErrorX
+	add.w	d5,d7				; add deltaY to error
+	add.w	d2,FDPoint_X(a5)	; add addX to penLocation.x
+	
+.checkErrorX:
+	;; if error2 <= deltaX
+	cmp.w	d6,d4
+	blt		.doLoop
+	add.w	d4,d7				; add deltaX to error
+	add.w	d3,FDPoint_Y(a5)	; add addY to penLocation.y
+
+.doLoop:
+	bra		.drawLinePixel
+	
+.done:
+	UNLK	a6
 	rts

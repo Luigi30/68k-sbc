@@ -9,6 +9,17 @@ uint8_t pen_back; // Background pen color.
 void DRAW_SetPenFore(uint8_t color_index) { pen_fore = color_index; }
 void DRAW_SetPenBack(uint8_t color_index) { pen_back = color_index; }
 
+void DRAW_Init()
+{
+  screenPort.vram_base = (uint8_t *)0x900000;
+  currentPort = &screenPort;
+  DRAW_SetVGAMode(VGA_MODE_2Eh);
+  VGA_SetStandardPalette();
+  //VGA_SetWriteMode(2);
+  //VGA_SetBitplaneWriteMask(0x0F);
+  //VGA_ChainPlanes();
+}
+
 void DRAW_SetVGAMode(VGA_Mode mode)
 {
   VGA_SetMode(mode);
@@ -69,7 +80,13 @@ void DRAW_SetLogicalMode(DRAW_LogicalMode mode)
   MMIO16(VGA_IO_ADDRESS(0x3CF)) = current | mode;
 }
 
-void DRAW_MovePen(Point p)
+void DRAW_MovePen(uint16_t x, uint16_t y)
+{
+  penLocation.x = x;
+  penLocation.y = y;
+}
+
+void DRAW_MovePenToPoint(Point p)
 {
   penLocation.x = p.x;
   penLocation.y = p.y;

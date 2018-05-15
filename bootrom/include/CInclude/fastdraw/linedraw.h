@@ -3,8 +3,12 @@
 
 #include <stdint.h>
 
+#include "fastdraw/types.h"
+
+extern Point penLocation;
+
 /* Draw a line with the fore pen color from the pen position to x,y.
    Move pen when complete. */
-void DRAW_LineTo(uint16_t x, uint16_t y);
+//void DRAW_LineTo(uint16_t x, uint16_t y);
 
 #endif

@@ -6,6 +6,7 @@
 #include "elf.h"
 #include "memmgr.h"
 #include "fastdraw.h"
+#include "vgaconsole.h"
 
 void Monitor_DrawBanner();
 void Monitor_InitPrompt();

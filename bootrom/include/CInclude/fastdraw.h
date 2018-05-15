@@ -19,7 +19,8 @@ extern uint8_t pen_back; // Background pen color.
 
 void DRAW_Init();
 
-void DRAW_MovePen(Point p); 
+void DRAW_MovePenToPoint(Point p);
+void DRAW_MovePen(uint16_t x, uint16_t y);
 void DRAW_SetPenFore(uint8_t color_index);
 void DRAW_SetPenBack(uint8_t color_index);
 
@@ -33,6 +34,6 @@ void DRAW_DrawRectangle(Rectangle *r);
 extern void DRAW_PutFontGlyph(__reg("a0") uint8_t *bitmap, __reg("d0") uint16_t dest_x, __reg("d1") uint16_t dest_y, __reg("d2") uint8_t code);
 
 void DRAW_PutString(uint8_t *str, VGA_Font *font, uint16_t dest_x, uint16_t dest_y);
+void DRAW_PutPixel(__reg("d0") uint16_t x, __reg("d1") uint16_t y);
 
-extern void DRAW_PutPixel(__reg("d0") uint16_t x, __reg("d1") uint16_t y);
 #endif

@@ -1,5 +1,5 @@
 AS      = vasmm68k_mot
-ASFLAGS = -m68000 -align -I$(INCDIR) -I$(INCDIR)/AInclude
+ASFLAGS = -m68000 -align -I$(COMMONDIR)/AInclude -I$(INCDIR)/AInclude
 
 CC	= vbccm68k
 CFLAGS	= -cpu=68000 -c99 -I$(LIBCINCDIR) -I$(INCDIR)/$(CINCLUDE) -I$(COMMONDIR)/$(CINCLUDE)
@@ -19,7 +19,8 @@ AINCLUDE = AInclude
 
 $(BINDIR)/bootrom.s68: $(OBJDIR)/crt0.o $(OBJDIR)/sysvars.o $(OBJDIR)/bootrom.o $(OBJDIR)/monitor.o $(OBJDIR)/romfs.o $(OBJDIR)/fat.o $(OBJDIR)/log.o \
 		       	$(OBJDIR)/memmgr.o $(OBJDIR)/dispatch.o $(OBJDIR)/osfunc.o $(OBJDIR)/elf.o $(OBJDIR)/print.o $(OBJDIR)/vga.o \
-			$(OBJDIR)/fastdraw.o $(OBJDIR)/fastdraw_asm.o $(OBJDIR)/vga_asm.o $(OBJDIR)/gfx/gfx.o $(OBJDIR)/fastdraw/linedraw.o ../libc/bin/libc68k.a
+			$(OBJDIR)/fastdraw.o $(OBJDIR)/fastdraw_asm.o $(OBJDIR)/vga_asm.o $(OBJDIR)/gfx/gfx.o $(OBJDIR)/fastdraw/linedraw.o \
+			$(OBJDIR)/vgaconsole.o ../libc/bin/libc68k.a
 	vlink $(LDFLAGS) -lc68k -o $(BINDIR)/bootrom.s68 $^
 	cp bin/bootrom.s68 /mnt/c/EASy68K/
 	m68k-atari-mint-objcopy -I srec -O binary $@ --pad-to=0x100000 /mnt/c/msys64/home/Luigi/mame/roms/luigisbc/68000.bin

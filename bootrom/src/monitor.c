@@ -12,59 +12,86 @@ const char STR_CommandPrompt[] = "> ";
 
 DrawPort *currentPort;
 
+extern void DRAW_LineTo(__reg("d0") uint16_t x, __reg("d1") uint16_t y);
+
 void Monitor_Go()
 {  
+  DRAW_Init();
+  VGACON_Init();
+
   Monitor_DrawBanner();
   Monitor_InitPrompt();
-
+  
   // temporary
-  screenPort.vram_base = (uint8_t *)0x900000;
-  currentPort = &screenPort;
-  DRAW_SetVGAMode(VGA_MODE_2Eh);
-  VGA_SetStandardPalette();
-  //VGA_SetWriteMode(2);
-  //VGA_SetBitplaneWriteMask(0x0F);
-  //VGA_ChainPlanes();
   
   Rectangle r;
-  DRAW_SetPenFore(0x0F);
+  DRAW_SetPenFore(0xFF);
   DRAW_SetRectangle(&r, 50, 50, 40, 40);
-  DRAW_DrawRectangle(&r);
-  DRAW_PutPixel(256, 256);
+  //DRAW_DrawRectangle(&r);
 
-  VGA_Font fixedsys12;
-  fixedsys12.bitmap.data = BITMAP_Fixedsys12;
-  fixedsys12.bitmap.size_x = 256;
-  fixedsys12.bitmap.size_y = 256;
-  fixedsys12.bitmap.vram_ptr = 0;
-  fixedsys12.glyph_x = 10;
-  fixedsys12.glyph_y = 16;
-
-  DRAW_PutFontGlyph(fixedsys12.bitmap.data, 256, 256, 'A');
+  VGACON_PutString("Video: Tseng Labs ET4000 - 1MB VRAM\n");
+  VGACON_PutString("Procyon 68000 ROM 5/12/18\n");
+  VGACON_PutString("\n");
+  VGACON_PutString("DRAW_MovePen and DRAW_LineTo octant test screen\n");
   for(int i=0;i<16;i++)
 	{
-	  DRAW_PutString("Hello World!", &fixedsys12, 0, i<<4);
+	  //VGACON_PutString("Hello World! This is a row ended with a newline character.\n");
 	}
   
-  VGA_Font F_8bitpusab12;
-  F_8bitpusab12.bitmap.data = BITMAP_8bitpusab12;
-  F_8bitpusab12.bitmap.size_x = 256;
-  F_8bitpusab12.bitmap.size_y = 256;
-  F_8bitpusab12.bitmap.vram_ptr = 0;
-  F_8bitpusab12.glyph_x = 10;
-  F_8bitpusab12.glyph_y = 16;
-
   VGA_Bitmap PolluxVGA;
   PolluxVGA.data = BITMAP_PolluxVGA;
   PolluxVGA.size_x = 128;
   PolluxVGA.size_y = 128;
   PolluxVGA.vram_ptr = 0;
-  
-  //VGA_SetPixel(0, 0, 0x0F);
-  for(int i=0;i<10;i++){
-	VGA_SetPixel(40+i, 40, 0x01 | 0x02 | 0x04 | 0x08);
-  }
 
+  DRAW_MovePen(0, 0);
+  DRAW_LineTo(320, 240);
+  
+  DRAW_MovePen(160, 0);
+  DRAW_LineTo(320, 240);
+
+  DRAW_MovePen(320, 0);
+  DRAW_LineTo(320, 240);
+
+  DRAW_MovePen(480, 0);
+  DRAW_LineTo(320, 240);
+
+  DRAW_MovePen(639, 0);
+  DRAW_LineTo(320, 240);
+
+  DRAW_MovePen(0, 479);
+  DRAW_LineTo(320, 240);
+
+  DRAW_MovePen(160, 479);
+  DRAW_LineTo(320, 240);
+
+  DRAW_MovePen(320, 479);
+  DRAW_LineTo(320, 240);
+
+  DRAW_MovePen(480, 479);
+  DRAW_LineTo(320, 240);
+
+  DRAW_MovePen(639, 479);
+  DRAW_LineTo(320, 240);
+
+  DRAW_MovePen(0, 120);
+  DRAW_LineTo(320, 240);
+
+  DRAW_MovePen(0, 240);
+  DRAW_LineTo(320, 240);
+
+  DRAW_MovePen(0, 360);
+  DRAW_LineTo(320, 240);
+
+  DRAW_MovePen(639, 120);
+  DRAW_LineTo(320, 240);
+
+  DRAW_MovePen(639, 240);
+  DRAW_LineTo(320, 240);
+
+  DRAW_MovePen(639, 360);
+  DRAW_LineTo(320, 240);
+  
   /*
   //Let's do a DMA transfer!
   //MMIO32(DMA_MAR(0)) = (uint32_t)fixedsys12.bitmap.data;
@@ -87,8 +114,6 @@ void Monitor_Go()
   */
   
   //VGA_PutBitmap(&PolluxVGA, 0, 256, 0, 0, 128, 128, BITMAP_FLIP_Y);
-  //VGA_PutBitmap(&fixedsys12, 400, 300, 0, 0, 256, 256);
-  //VGA_PutBitmap(&fixedsys12, 0, 0, 0, 0, 256, 256, BITMAP_NONE);
   //DRAW_PutFontGlyph(&fixedsys12, 'A', 384, 384);
   //DRAW_PutString("Hello! I present really slow text printing.", &fixedsys12, 0, 0);
   //DRAW_PutString("With multiple fonts!", &F_8bitpusab12, 0, 16);
