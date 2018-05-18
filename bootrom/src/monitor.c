@@ -13,6 +13,7 @@ const char STR_CommandPrompt[] = "> ";
 DrawPort *currentPort;
 
 extern void DRAW_LineTo(__reg("d0") uint16_t x, __reg("d1") uint16_t y);
+extern void DRAW_ScreenFill(__reg("d0") uint8_t color);
 
 void Monitor_Go()
 {  
@@ -21,18 +22,19 @@ void Monitor_Go()
 
   Monitor_DrawBanner();
   Monitor_InitPrompt();
+
+  DRAW_ScreenFill(0x07);
   
   // temporary
-  
   Rectangle r;
-  DRAW_SetPenFore(0xFF);
+  DRAW_SetPenFore(0x2F);
   DRAW_SetRectangle(&r, 50, 50, 40, 40);
   //DRAW_DrawRectangle(&r);
 
   VGACON_PutString("Video: Tseng Labs ET4000 - 1MB VRAM\n");
   VGACON_PutString("Procyon 68000 ROM 5/12/18\n");
   VGACON_PutString("\n");
-  VGACON_PutString("DRAW_MovePen and DRAW_LineTo octant test screen\n");
+  VGACON_PutString("DRAW_Polygon test screen\n");
   for(int i=0;i<16;i++)
 	{
 	  //VGACON_PutString("Hello World! This is a row ended with a newline character.\n");
@@ -44,53 +46,20 @@ void Monitor_Go()
   PolluxVGA.size_y = 128;
   PolluxVGA.vram_ptr = 0;
 
-  DRAW_MovePen(0, 0);
-  DRAW_LineTo(320, 240);
-  
-  DRAW_MovePen(160, 0);
-  DRAW_LineTo(320, 240);
+  DRAW_SetPenFore(0x3F);
+  Point polygon[16];
+  DRAW_MakePoint(&polygon[0], 200, 200);
+  DRAW_MakePoint(&polygon[1], 250, 200);
+  DRAW_MakePoint(&polygon[2], 275, 250);
+  DRAW_MakePoint(&polygon[3], 200, 300);
+  DRAW_MakePoint(&polygon[4], 140, 240);
+  DRAW_PutPolygon(polygon, 5);
 
-  DRAW_MovePen(320, 0);
-  DRAW_LineTo(320, 240);
-
-  DRAW_MovePen(480, 0);
-  DRAW_LineTo(320, 240);
-
-  DRAW_MovePen(639, 0);
-  DRAW_LineTo(320, 240);
-
-  DRAW_MovePen(0, 479);
-  DRAW_LineTo(320, 240);
-
-  DRAW_MovePen(160, 479);
-  DRAW_LineTo(320, 240);
-
-  DRAW_MovePen(320, 479);
-  DRAW_LineTo(320, 240);
-
-  DRAW_MovePen(480, 479);
-  DRAW_LineTo(320, 240);
-
-  DRAW_MovePen(639, 479);
-  DRAW_LineTo(320, 240);
-
-  DRAW_MovePen(0, 120);
-  DRAW_LineTo(320, 240);
-
-  DRAW_MovePen(0, 240);
-  DRAW_LineTo(320, 240);
-
-  DRAW_MovePen(0, 360);
-  DRAW_LineTo(320, 240);
-
-  DRAW_MovePen(639, 120);
-  DRAW_LineTo(320, 240);
-
-  DRAW_MovePen(639, 240);
-  DRAW_LineTo(320, 240);
-
-  DRAW_MovePen(639, 360);
-  DRAW_LineTo(320, 240);
+  DRAW_SetPenFore(0x2F);
+  DRAW_MakePoint(&polygon[0], 400, 300);
+  DRAW_MakePoint(&polygon[1], 375, 320);
+  DRAW_MakePoint(&polygon[2], 330, 245);
+  DRAW_PutPolygon(polygon, 3);
   
   /*
   //Let's do a DMA transfer!
@@ -117,12 +86,52 @@ void Monitor_Go()
   //DRAW_PutFontGlyph(&fixedsys12, 'A', 384, 384);
   //DRAW_PutString("Hello! I present really slow text printing.", &fixedsys12, 0, 0);
   //DRAW_PutString("With multiple fonts!", &F_8bitpusab12, 0, 16);
-
+  
   while(TRUE)
 	{
-	  Monitor_WaitForEntry();
-	  Monitor_ProcessEntry();
-	  Monitor_InitPrompt();
+	  if(VGA_IsInVBLANK())
+		DEMO_ProcessNextFrame();
+
+	  if(Monitor_WaitForEntry())
+		{
+		  Monitor_ProcessEntry();
+		  Monitor_InitPrompt();
+		}
+	}
+}
+
+uint16_t shape_x = 50;
+uint16_t shape_y = 50;
+const uint32_t ZERO = 0;
+
+void DEMO_ProcessNextFrame()
+{
+  /*
+  //Let's do a DMA transfer!
+  MMIO32(DMA_MAR(0)) = (uint32_t)&ZERO;
+  MMIO32(DMA_DAR(0)) = 0x100000;
+  MMIO16(DMA_MTCR(0)) = 0xFFFF; // longs
+  MMIO8(DMA_DCR(0)) = DMA_XRM_BURST | DMA_DPS_16 | DMA_DTYP_ACK;
+  MMIO8(DMA_OCR(0)) = DMA_SIZE_LONG | DMA_CHAIN_NONE | DMA_DIR_M2D;
+  MMIO8(DMA_SCR(0)) = DMA_MAC_SAME | DMA_DAC_UP;
+  MMIO8(DMA_CCR(0)) = DMA_STR_START;
+  */
+
+  //shape_x += 2;
+  //shape_y += 2;
+
+  Point polygon[4];
+  DRAW_SetPenFore(0x4F);
+  DRAW_MakePoint(&polygon[0], shape_x, shape_y);
+  DRAW_MakePoint(&polygon[1], shape_x, shape_y+100);
+  DRAW_MakePoint(&polygon[2], shape_x+100, shape_y+100);
+  DRAW_MakePoint(&polygon[3], shape_x+100, shape_y);
+  DRAW_PutPolygon(polygon, 4);
+
+  if(shape_x >= 500)
+	{
+	  shape_x = 50;
+	  shape_y = 50;
 	}
 }
 
@@ -138,31 +147,28 @@ void Monitor_InitPrompt()
   Monitor_ClearPromptBuffer();
 }
 
-void Monitor_WaitForEntry()
+uint8_t Monitor_WaitForEntry()
 {
-  int waiting = TRUE;
-  serial_string_out(STR_CommandPrompt);
-  
-  while(waiting) {
-	if(serial_char_waiting())
-	  {
-		char incoming = serial_in();
-
-		if(incoming == 13) // CR
-		  {
-			waiting = FALSE;
-		  }
-		else if(incoming == 8)  // BS
-		  {
-			inputBuffer[input_buffer_position--] = 0x00;
-		  }
-		else {
-		  inputBuffer[input_buffer_position++] = incoming;
+  if(serial_char_waiting())
+	{
+	  char incoming = serial_in();
+	  
+	  if(incoming == 13) // CR
+		{
+		  return true;
 		}
-
-		serial_char_out(incoming);
+	  else if(incoming == 8)  // BS
+		{
+		  inputBuffer[input_buffer_position--] = 0x00;
+		}
+	  else {
+		inputBuffer[input_buffer_position++] = incoming;
 	  }
-  }
+	  
+	  serial_char_out(incoming);
+	}
+
+  return false;
 }
 
 void Monitor_ClearPromptBuffer()

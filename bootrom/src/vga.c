@@ -353,12 +353,37 @@ void VGA_SetStandardPalette()
   VGA_SetDMAColor(63, 63, 21);
   VGA_SetDMAColor(63, 63, 63);
 
-  for(int i=0;i<240; i++)
+  for(int i=0;i<16;i++)
+	{
+	  /* 16 shades of gray */
+	  VGA_SetDMAColor((i*16)-1, (i*16)-1, (i*16)-1);
+	}
+
+  for(int i=0;i<16;i++)
+	{
+	  /* 16 shades of red */
+	  VGA_SetDMAColor((i*16)-1, 0, 0);
+	}
+
+  for(int i=0;i<16;i++)
+	{
+	  /* 16 shades of green */
+	  VGA_SetDMAColor(0, (i*16)-1, 0);
+	}
+
+  for(int i=0;i<16;i++)
+	{
+	  /* 16 shades of blue */
+	  VGA_SetDMAColor(0, 0, (i*16)-1);
+	}  
+
+  /* Init the rest of the palette to white */
+  for(int i=0;i<176; i++)
 	{
 	  VGA_SetDMAColor(63, 63, 63);
 	}
   
-  // Set 16 palette entries.
+  // Reset the palette index keys
   for(int i=0; i<256; i++)
 	{
 	  int discard = MMIO16(VGA_IO_ADDRESS(0x3DA));
@@ -366,7 +391,7 @@ void VGA_SetStandardPalette()
 	  MMIO16(VGA_IO_ADDRESS(0x3C0)) = i;
 	}
 
-  // Re-enable the palette.
+  // Enable the palette.
   MMIO16(VGA_IO_ADDRESS(0x3C0)) = 0x20;
 }
 
@@ -454,4 +479,12 @@ void VGA_PutBitmap(VGA_Bitmap *bitmap, uint16_t dest_x, uint16_t dest_y, uint16_
 			}
 		}
 	}
+}
+
+uint8_t VGA_IsInVBLANK()
+{
+  if(MMIO8(VGA_IO_ADDRESS(0x3DA)) & 0x08)
+	return 1;
+  else
+	return 0;
 }

@@ -45,6 +45,7 @@ extern uint8_t BITMAP_PolluxVGA[];
 extern uint8_t BITMAP_Fixedsys12[];
 extern uint8_t BITMAP_8bitpusab12[];
 
+uint8_t VGA_IsInVBLANK();
 void VGA_SetControllerRegister(uint16_t, uint16_t, uint8_t, uint8_t);
 void VGA_SetDMAColor(uint8_t, uint8_t, uint8_t);
 void VGA_SetBitplaneWriteMask(uint8_t);

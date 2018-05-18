@@ -1,7 +1,9 @@
 	public _DRAW_PutPixel
 	public _DRAW_PutFontGlyph
 	public _DRAW_LineTo
+	public _DRAW_ScreenFill
 	
+	include "stack.i"
 	include	"c_types.i"
 	include "fastdraw/types.i"
 	
@@ -89,6 +91,7 @@ ColumnLoop:
 _DRAW_LineTo:
 	;; d0.w = x1
 	;; d1.w = y1
+	movem.l	a2-a6/d2-d7,-(sp)
 
 	LINK	a6,#-8
 	move.w	d0,a1			; a1 = x2
@@ -183,4 +186,27 @@ _DRAW_LineTo:
 	
 .done:
 	UNLK	a6
+
+	movem.l	(sp)+,a2-a6/d2-d7
+	rts
+
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+_DRAW_ScreenFill:
+	;; d0.b - color index
+
+	move.l	_currentPort,a0
+	move.l	DRAWPORT_vram_base(a0),a1
+	move.w	DRAWPORT_size_x(a0),d7
+	move.w	DRAWPORT_size_y(a0),d6
+	
+.rowLoop:
+	move.w	DRAWPORT_size_x(a0),d7
+	
+.columnLoop:
+	move.l	#$07070707,(a1)+
+	dbra	d7,.columnLoop
+
+	dbra	d6,.rowLoop
+	
 	rts

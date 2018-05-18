@@ -19,6 +19,8 @@ extern uint8_t pen_back; // Background pen color.
 
 void DRAW_Init();
 
+void DRAW_MakePoint(Point *p, uint16_t x, uint16_t y);
+
 void DRAW_MovePenToPoint(Point p);
 void DRAW_MovePen(uint16_t x, uint16_t y);
 void DRAW_SetPenFore(uint8_t color_index);

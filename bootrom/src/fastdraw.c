@@ -6,6 +6,9 @@ Point penLocation;
 uint8_t pen_fore; // Foreground pen color.
 uint8_t pen_back; // Background pen color.
 
+Pen pen_foreground;
+Pen pen_background;
+
 void DRAW_SetPenFore(uint8_t color_index) { pen_fore = color_index; }
 void DRAW_SetPenBack(uint8_t color_index) { pen_back = color_index; }
 
@@ -100,3 +103,6 @@ void DRAW_PutString(uint8_t *str, VGA_Font *font, uint16_t dest_x, uint16_t dest
 	  dest_x += font->glyph_x;
 	}
 }
+
+void DRAW_MakePoint(Point *p, uint16_t x, uint16_t y) { p->x = x; p->y = y; }
+
