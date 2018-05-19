@@ -67,7 +67,7 @@ VEC_LEVEL_3_INTERRUPT:		* $00006C */
 	dc.l	_bios_start
 
 VEC_LEVEL_4_INTERRUPT:		* $000070 */
-	dc.l	_bios_start
+	dc.l	_isr_com1
 
 VEC_LEVEL_5_INTERRUPT:		* $000074 */
 	dc.l	_bios_start
@@ -86,3 +86,7 @@ VEC_TRAP_1:
 
 _bios_start:
 	jmp	$1000
+
+_isr_com1:
+	jsr	_MOUSE_PacketISR
+	rte

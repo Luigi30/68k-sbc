@@ -202,6 +202,7 @@ _DRAW_ScreenFill:
 	
 .rowLoop:
 	move.w	DRAWPORT_size_x(a0),d7
+	lsr		#2,d7
 	
 .columnLoop:
 	move.l	#$07070707,(a1)+

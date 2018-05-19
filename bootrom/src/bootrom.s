@@ -25,6 +25,8 @@ START:
 	JSR	InitSysVars
 
 	JSR	_MEMMGR_Initialize
+
+	andi #$3300,SR
 	JSR	_Monitor_Go
 
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;

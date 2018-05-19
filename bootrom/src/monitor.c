@@ -19,7 +19,8 @@ void Monitor_Go()
 {  
   DRAW_Init();
   VGACON_Init();
-
+  MOUSE_SetupCOM1();
+  
   Monitor_DrawBanner();
   Monitor_InitPrompt();
 
