@@ -17,10 +17,12 @@ COMMONDIR = ../common
 CINCLUDE = CInclude
 AINCLUDE = AInclude
 
-$(BINDIR)/bootrom.s68: $(OBJDIR)/crt0.o $(OBJDIR)/sysvars.o $(OBJDIR)/bootrom.o $(OBJDIR)/monitor.o $(OBJDIR)/romfs.o $(OBJDIR)/fat.o $(OBJDIR)/log.o \
-		       	$(OBJDIR)/memmgr.o $(OBJDIR)/dispatch.o $(OBJDIR)/osfunc.o $(OBJDIR)/elf.o $(OBJDIR)/print.o $(OBJDIR)/vga.o \
-			$(OBJDIR)/fastdraw.o $(OBJDIR)/fastdraw_asm.o $(OBJDIR)/vga_asm.o $(OBJDIR)/gfx/gfx.o $(OBJDIR)/fastdraw/linedraw.o \
-			$(OBJDIR)/vgaconsole.o $(OBJDIR)/mouse.o $(OBJDIR)/mouse_asm.o ../libc/bin/libc68k.a
+$(BINDIR)/bootrom.s68:	$(OBJDIR)/crt0.o $(OBJDIR)/sysvars.o $(OBJDIR)/bootrom.o $(OBJDIR)/monitor.o $(OBJDIR)/romfs.o $(OBJDIR)/fat.o $(OBJDIR)/log.o \
+				    	$(OBJDIR)/memmgr.o $(OBJDIR)/dispatch.o $(OBJDIR)/osfunc.o $(OBJDIR)/elf.o $(OBJDIR)/print.o $(OBJDIR)/vga.o \
+						$(OBJDIR)/fastdraw.o $(OBJDIR)/fastdraw_asm.o $(OBJDIR)/vga_asm.o $(OBJDIR)/fastdraw/linedraw.o \
+						$(OBJDIR)/vgaconsole.o $(OBJDIR)/mouse.o $(OBJDIR)/mouse_asm.o $(OBJDIR)/nodelist.o $(OBJDIR)/nodelist_asm.o \
+						 $(OBJDIR)/devices/devices.o $(OBJDIR)/devices/mouse.o $(OBJDIR)/gfx/gfx.o ../libc/bin/libc68k.a
+
 	vlink $(LDFLAGS) -lc68k -o $(BINDIR)/bootrom.s68 $^
 	cp bin/bootrom.s68 /mnt/c/EASy68K/
 	m68k-atari-mint-objcopy -I srec -O binary $@ --pad-to=0x100000 /mnt/c/msys64/home/Luigi/mame/roms/luigisbc/68000.bin

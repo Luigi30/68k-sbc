@@ -8,6 +8,7 @@
 #include "fastdraw.h"
 #include "fastdraw/linedraw.h"
 #include "vgaconsole.h"
+#include "mouse.h"
 
 void Monitor_DrawBanner();
 void Monitor_InitPrompt();

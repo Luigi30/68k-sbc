@@ -19,6 +19,11 @@ void Monitor_Go()
 {  
   DRAW_Init();
   VGACON_Init();
+  DEVICE_InitSubsystem();
+  DEVICE_Mouse_Create();
+  DEVICE_PrintAllDevices();
+  DEVICE_DoCommand("dev-mouse", 0);
+  
   MOUSE_SetupCOM1();
   
   Monitor_DrawBanner();
