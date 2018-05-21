@@ -15,10 +15,53 @@ DrawPort *currentPort;
 extern void DRAW_LineTo(__reg("d0") uint16_t x, __reg("d1") uint16_t y);
 extern void DRAW_ScreenFill(__reg("d0") uint8_t color);
 
+/* task testing */
+int x = 0;
+void testtask1()
+{
+  int y = 0;
+
+  while(true)
+	{
+	  x++;
+	  y--;
+	  printf("testtask1: shared var is %d, non-shared is %d\n", x);
+	};
+}
+
+void testtask2()
+{
+  int y = 0;
+
+  while(true)
+	{
+	  x++;
+	  y++;
+	  printf("testtask2: shared var is %d, non-shared is %d\n", x);
+	};
+}
+
 void Monitor_Go()
 {  
   DRAW_Init();
   VGACON_Init();
+  TASK_InitSubsystem();
+
+  Task *task1 = MEMMGR_NewPtr(sizeof(Task), H_SYSHEAP);
+  task1->heap = TASK_SYSHEAP;
+
+  Task *task2 = MEMMGR_NewPtr(sizeof(Task), H_SYSHEAP);
+  task2->heap = TASK_SYSHEAP;
+  
+  TASK_Add(task1, testtask1, NULL, 4096);
+  TASK_Add(task2, testtask2, NULL, 4096);
+
+  TASK_EnableSwitching(1);
+  TASK_AllowInterrupts();
+  
+  printf("Waiting for scheduler...\n");  
+  while(true) {};
+  
   DEVICE_InitSubsystem();
   DEVICE_Mouse_Create();
   DEVICE_PrintAllDevices();
@@ -243,7 +286,7 @@ void RunELF(char *path)
 
   int fd = FAT_OpenFile(path, FILE_FLAG_READ);
   uint32_t file_size = FAT_GetFileSize(fd);
-  HANDLE file_data = MEMMGR_NewHandle(file_size+1);
+  HANDLE file_data = MEMMGR_NewHandle(file_size+1, H_SYSHEAP);
   
   FAT_ReadFile(drive_bpb[DRIVE_R],
 			   fd,
@@ -251,4 +294,10 @@ void RunELF(char *path)
 			   file_size);
 
   ELF_LoadExecutable(*file_data);
+}
+
+void ISR_Spurious()
+{
+  //just for now
+  printf("*** SPURIOUS INTERRUPT ***\n");
 }

@@ -216,6 +216,8 @@ out:
 
 int simple_printf(char *fmt, ...)
 {
+	TASK_ForbidInterrupts();
+
 	va_list ap;
 	int r;
 
@@ -223,17 +225,23 @@ int simple_printf(char *fmt, ...)
 	r = simple_vsprintf(NULL, fmt, ap);
 	va_end(ap);
 
+	TASK_AllowInterrupts();
+
 	return r;
 }
 
 int simple_sprintf(char *buf, char *fmt, ...)
 {
+	TASK_ForbidInterrupts();
+
 	va_list ap;
 	int r;
 
 	va_start(ap, fmt);
 	r = simple_vsprintf(&buf, fmt, ap);
 	va_end(ap);
+
+	TASK_AllowInterrupts();
 
 	return r;
 }

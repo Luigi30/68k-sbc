@@ -214,26 +214,34 @@ out:
 
 int simple_printf(char *fmt, ...)
 {
-	va_list ap;
-	int r;
+  TASK_ForbidInterrupts();
 
-	va_start(ap, fmt);
-	r = simple_vsprintf(NULL, fmt, ap);
-	va_end(ap);
+  va_list ap;
+  int r;
+  
+  va_start(ap, fmt);
+  r = simple_vsprintf(NULL, fmt, ap);
+  va_end(ap);
 
-	return r;
+  TASK_AllowInterrupts();
+  
+  return r;
 }
 
 int simple_sprintf(char *buf, char *fmt, ...)
 {
-	va_list ap;
-	int r;
+  TASK_ForbidInterrupts();
+  
+  va_list ap;
+  int r;
+  
+  va_start(ap, fmt);
+  r = simple_vsprintf(&buf, fmt, ap);
+  va_end(ap);
 
-	va_start(ap, fmt);
-	r = simple_vsprintf(&buf, fmt, ap);
-	va_end(ap);
-
-	return r;
+  TASK_AllowInterrupts();
+  
+  return r;
 }
 
 

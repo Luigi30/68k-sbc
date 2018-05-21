@@ -1,10 +1,13 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "devices/devices.h"
+#include "devices/mouse.h"
 #include "devices/serial.h"
 #include "fat.h"
 #include "elf.h"
 #include "memmgr.h"
+#include "tasks.h"
 #include "fastdraw.h"
 #include "fastdraw/linedraw.h"
 #include "vgaconsole.h"
@@ -21,3 +24,6 @@ void Monitor_ProcessEntry();
 void RunELF(char *path);
 
 void DEMO_ProcessNextFrame();
+
+// just for now
+void ISR_Spurious();

@@ -37,6 +37,7 @@ Copy_DataBSS:
 	
 	move.l	#_DATA_START,a0			; start of .data
 	move.l	#RAMSTART,a1
+	add.l	#$8000,a1
 .copyLoop:
 	move.b	(a0)+,(a1)+
 	sub.l	#1,d0
@@ -50,6 +51,7 @@ Copy_DataBSS:
 	move.l	d0,d2
 	
 	move.l	#RAMSTART,a1
+	add.l	#$8000,a1
 	add.l	d0,a1				; a1 = RAMSTART + .data length
 	
 	move.l	#_BSS_END,d0

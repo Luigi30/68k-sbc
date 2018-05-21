@@ -7,8 +7,8 @@ CPTR system_pointer_list[MASTER_POINTER_COUNT];
 CPTR application_pointer_list[MASTER_POINTER_COUNT];
 
 void MEMMGR_Initialize()
-{
-  SysHeap = 0x104000;
+{ 
+  SysHeap = 0x110000;
   SysHeapEnd = SysHeap + SYSTEM_HEAP_SIZE;
 
   ApplHeapEnd = 0x1FFF00;
@@ -104,7 +104,11 @@ CPTR MEMMGR_AllocateBlock(Heap *heap, uint32_t requested_size, MEMMGR_BLOCK_FLAG
 		 (uint32_t)block->next > RAMEnd ||
 		 (uint32_t)block->destination > RAMEnd)
 		{
-		  printf("MEMMGR_AllocateBlock: Heap is corrupt! \nHalting system.\n");
+		  printf("MEMMGR_AllocateBlock: Heap is corrupt: Block pointer is beyond RAMEnd. \nHalting system.\n");
+		  printf("Bad block is at $%x\n", block);
+		  printf("block->previous: $%x\n", block->previous);
+		  printf("block->next: $%x\n", block->next);
+		  printf("block->destination: $%x\n", block->destination);
 		  while(true) {};
 		}
 
@@ -133,7 +137,7 @@ CPTR MEMMGR_AllocateBlock(Heap *heap, uint32_t requested_size, MEMMGR_BLOCK_FLAG
 		  block->size = adjusted_size;
 		  block->flags = flags;
 
-		  MEMMGR_DumpHeapBlocks(&heap_system);
+		  //MEMMGR_DumpHeapBlocks(&heap_system);
 		  return block;
 		  
 		}

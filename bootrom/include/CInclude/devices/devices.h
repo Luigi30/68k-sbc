@@ -26,6 +26,7 @@ typedef struct {
 
 extern List DEVICE_ActiveDevs;
 
+void DEVICE_InitSubsystem();
 void DEVICE_PrintAllDevices();
 void DEVICE_DoCommand(uint8_t *device_name, uint8_t command_index);
 

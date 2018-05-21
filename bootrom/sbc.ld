@@ -25,7 +25,7 @@ SECTIONS
 		. = ALIGN(4);
 	} >RAM AT>ROM
 	BSS (NOLOAD): { 
-		. = ALIGN(0x1000);
+		. = ALIGN(0x2000);
 		_BSS_START = .;
 		*(.bss BSS bss)
 		*(COMMON)

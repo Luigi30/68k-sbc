@@ -55,7 +55,7 @@ VEC_UNINITIALIZED_INTERRUPT:	* $00003C */
 	dc.l	_bios_start	* $00005C */
 
 VEC_SPURIOUS_INTERRUPT:		* $000060 */
-	dc.l	_bios_start
+	dc.l	_isr_spurious
 
 VEC_LEVEL_1_INTERRUPT:		* $000064 */
 	dc.l	_bios_start
@@ -73,7 +73,7 @@ VEC_LEVEL_5_INTERRUPT:		* $000074 */
 	dc.l	_bios_start
 
 VEC_LEVEL_6_INTERRUPT:		* $000078 */
-	dc.l	_bios_start
+	dc.l	_isr_mfp
 
 VEC_LEVEL_7_INTERRUPT:		* $00007C */
 	dc.l	_bios_start
@@ -84,9 +84,94 @@ VEC_TRAP_0:			* $000080 */
 VEC_TRAP_1:
 	dc.l	_bios_start
 
+VEC_TRAP_2:
+	dc.l	_bios_start
+VEC_TRAP_3:
+	dc.l	_bios_start
+VEC_TRAP_4:
+	dc.l	_bios_start
+VEC_TRAP_5:
+	dc.l	_bios_start
+VEC_TRAP_6:
+	dc.l	_bios_start
+VEC_TRAP_7:
+	dc.l	_bios_start
+VEC_TRAP_8:
+	dc.l	_bios_start
+VEC_TRAP_9:
+	dc.l	_bios_start
+VEC_TRAP_10:
+	dc.l	_bios_start
+VEC_TRAP_11:
+	dc.l	_bios_start
+VEC_TRAP_12:
+	dc.l	_bios_start
+VEC_TRAP_13:
+	dc.l	_bios_start
+VEC_TRAP_14:
+	dc.l	_bios_start
+VEC_TRAP_15:
+	dc.l	_bios_start
+
+VEC_RESERVED:
+	REPT	16
+	dc.l	_bios_start
+	ENDR
+	
+VEC_MFP_0:
+	dc.l	_bios_start
+VEC_MFP_1:
+	dc.l	_bios_start
+VEC_MFP_2:
+	dc.l	_bios_start
+VEC_MFP_3:
+	dc.l	_bios_start
+VEC_MFP_4:
+	dc.l	_bios_start
+VEC_MFP_5:
+	dc.l	_bios_start
+VEC_MFP_6:
+	dc.l	_bios_start
+VEC_MFP_7:
+	dc.l	_bios_start
+VEC_MFP_8:
+	dc.l	_bios_start
+VEC_MFP_9:
+	dc.l	_bios_start
+VEC_MFP_10:
+	dc.l	_bios_start
+VEC_MFP_11:
+	dc.l	_bios_start
+VEC_MFP_12:
+	dc.l	_bios_start
+VEC_MFP_13:
+	dc.l	_isr_timera
+VEC_MFP_14:
+	dc.l	_bios_start
+VEC_MFP_15:
+	dc.l	_bios_start
+
+	
 _bios_start:
 	jmp	$1000
 
+	even
 _isr_com1:
 	jsr	_MOUSE_PacketISR
+	rte
+
+	even
+_isr_mfp:
+	jsr	_MFP_ISR
+	rte
+
+	even
+_isr_timera:	
+	jmp	_TIMERA_ISR
+
+	even
+_isr_spurious:
+	movem.l	a0-a6/d0-d7,-(sp)
+	jsr	_ISR_Spurious
+	movem.l	(sp)+,a0-a6/d0-d7
 	rte
