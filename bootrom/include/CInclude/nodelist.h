@@ -42,6 +42,6 @@ extern void LIST_AddTail(__reg("a0") List *list, __reg("a1") Node *node);
 
 extern Node *LIST_RemHead(__reg("a0") List *list);
 extern Node *LIST_RemTail(__reg("a0") List *list);
-extern Node *LIST_Remove(__reg("a1") Node *node);
+extern Node *LIST_Remove(__reg("a0") List *list, __reg("a1") Node *node);
 
 #endif

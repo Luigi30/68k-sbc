@@ -7,16 +7,19 @@ uint32_t SFRAME_PC = 0;
 uint8_t TASK_SwitchingEnabled = 0;
 
 List *TASK_List;
-List TASK_ReadyList;
+List *TASK_ReadyList;
 
 void TASK_InitSubsystem()
 {
   TASK_List = MEMMGR_NewPtr(sizeof(List), H_SYSHEAP);
   LIST_Init(TASK_List, 0);
+
+  TASK_ReadyList = MEMMGR_NewPtr(sizeof(List), H_SYSHEAP);
+  LIST_Init(TASK_ReadyList, 0);
+  
   //printf("List at %x is initialized\n", TASK_List);
   MMIO8(0x600017) = 0x40; // MFP vectors now begin at number 64
   MMIO8(0x600007) = 0x20; // enable TIMER A interrupt
-  //MMIO8(0x600013) = 0x20; // unmask TIMER A interrupt
   
   // Set TIMER A for delay mode, 200 prescaler
   MMIO8(0x600019) = 0x10 | 0x07;
@@ -52,6 +55,7 @@ void TASK_Add(Task *task,
   task->stack_pointer = task->stack_high;
   
   LIST_AddHead(TASK_List, (Node *)task);
+  LIST_AddHead(TASK_ReadyList, (Node *)task);
   printf("TASK: Task %x added to task list. Task's SP is %x\n",
 		 task,
 		 task->stack_pointer);
@@ -69,10 +73,10 @@ void TASK_UpdateReadyQueue()
 {
   Task *task;
 
-  for(task = TASK_ReadyList.lh_Head; task->node.ln_Succ != NULL; task = task->node.ln_Succ)
+  for(task = TASK_ReadyList->lh_Head; task->node.ln_Succ != NULL; task = task->node.ln_Succ)
 	{
 	  if(task->state != TASK_READY)
-		LIST_Remove(task);
+		LIST_Remove(TASK_ReadyList, task);
 	}
 
   //TODO: look for ready tasks and add them to the queue

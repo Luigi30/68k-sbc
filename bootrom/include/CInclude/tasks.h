@@ -36,10 +36,12 @@ typedef struct {
   uint32_t registers[16];
   uint16_t status_register;
   uint32_t pc;
+
+  Heap *task_heap;
 } Task;
 
 extern List *TASK_List;
-extern List TASK_ReadyList;
+extern List *TASK_ReadyList;
 
 void TASK_InitSubsystem();
 void TASK_EnableSwitching(uint8_t enable);
