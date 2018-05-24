@@ -15,6 +15,9 @@ DrawPort *currentPort;
 extern void DRAW_LineTo(__reg("d0") uint16_t x, __reg("d1") uint16_t y);
 extern void DRAW_ScreenFill(__reg("d0") uint8_t color);
 
+void MonitorTask();
+void VGATask();
+
 /* task testing */
 int x = 0;
 void testtask1()
@@ -47,15 +50,19 @@ void Monitor_Go()
   VGACON_Init();
   TASK_InitSubsystem();
 
-  Task *task1 = MEMMGR_NewPtr(sizeof(Task), H_SYSHEAP);
-  task1->heap = TASK_SYSHEAP;
+  Task *task1 = MEMMGR_NewPtr(sizeof(Task)+8, H_SYSHEAP);
+  TaskInfo *task1_info = MEMMGR_NewPtr(sizeof(TaskInfo), H_SYSHEAP);
+  task1->info = task1_info;
+  task1->info->heap = TASK_SYSHEAP;
 
-  Task *task2 = MEMMGR_NewPtr(sizeof(Task), H_SYSHEAP);
-  task2->heap = TASK_SYSHEAP;
+  Task *task2 = MEMMGR_NewPtr(sizeof(Task)+8, H_SYSHEAP);
+  TaskInfo *task2_info = MEMMGR_NewPtr(sizeof(TaskInfo), H_SYSHEAP);
+  task2->info = MEMMGR_NewPtr(sizeof(TaskInfo), H_SYSHEAP);
+  task2->info->heap = TASK_SYSHEAP;
   
-  TASK_Add(task1, testtask1, NULL, 4096);
-  TASK_Add(task2, testtask2, NULL, 4096);
-
+  TASK_Add(task1, MonitorTask, NULL, 4096);
+  TASK_Add(task2, VGATask, NULL, 4096);
+  
   TASK_EnableSwitching(1);
   TASK_AllowInterrupts();
   
@@ -72,43 +79,6 @@ void Monitor_Go()
   Monitor_DrawBanner();
   Monitor_InitPrompt();
 
-  DRAW_ScreenFill(0x07);
-  
-  // temporary
-  Rectangle r;
-  DRAW_SetPenFore(0x2F);
-  DRAW_SetRectangle(&r, 50, 50, 40, 40);
-  //DRAW_DrawRectangle(&r);
-
-  VGACON_PutString("Video: Tseng Labs ET4000 - 1MB VRAM\n");
-  VGACON_PutString("Procyon 68000 ROM 5/12/18\n");
-  VGACON_PutString("\n");
-  VGACON_PutString("DRAW_Polygon test screen\n");
-  for(int i=0;i<16;i++)
-	{
-	  //VGACON_PutString("Hello World! This is a row ended with a newline character.\n");
-	}
-  
-  VGA_Bitmap PolluxVGA;
-  PolluxVGA.data = BITMAP_PolluxVGA;
-  PolluxVGA.size_x = 128;
-  PolluxVGA.size_y = 128;
-  PolluxVGA.vram_ptr = 0;
-
-  DRAW_SetPenFore(0x3F);
-  Point polygon[16];
-  DRAW_MakePoint(&polygon[0], 200, 200);
-  DRAW_MakePoint(&polygon[1], 250, 200);
-  DRAW_MakePoint(&polygon[2], 275, 250);
-  DRAW_MakePoint(&polygon[3], 200, 300);
-  DRAW_MakePoint(&polygon[4], 140, 240);
-  DRAW_PutPolygon(polygon, 5);
-
-  DRAW_SetPenFore(0x2F);
-  DRAW_MakePoint(&polygon[0], 400, 300);
-  DRAW_MakePoint(&polygon[1], 375, 320);
-  DRAW_MakePoint(&polygon[2], 330, 245);
-  DRAW_PutPolygon(polygon, 3);
   
   /*
   //Let's do a DMA transfer!
@@ -140,13 +110,58 @@ void Monitor_Go()
 	{
 	  if(VGA_IsInVBLANK())
 		DEMO_ProcessNextFrame();
+	}
+}
 
+void MonitorTask()
+{
+  while(true)
+	{
 	  if(Monitor_WaitForEntry())
 		{
 		  Monitor_ProcessEntry();
 		  Monitor_InitPrompt();
 		}
 	}
+}
+
+void VGATask()
+{
+  DRAW_ScreenFill(0x07);
+  
+  // temporary
+  Rectangle r;
+  DRAW_SetPenFore(0x2F);
+  DRAW_SetRectangle(&r, 50, 50, 40, 40);
+  //DRAW_DrawRectangle(&r);
+
+  VGACON_PutString("Video: Tseng Labs ET4000 - 1MB VRAM\n");
+  VGACON_PutString("Procyon 68000 ROM 5/12/18\n");
+  VGACON_PutString("\n");
+  VGACON_PutString("DRAW_Polygon test screen\n");
+  
+  VGA_Bitmap PolluxVGA;
+  PolluxVGA.data = BITMAP_PolluxVGA;
+  PolluxVGA.size_x = 128;
+  PolluxVGA.size_y = 128;
+  PolluxVGA.vram_ptr = 0;
+
+  DRAW_SetPenFore(0x3F);
+  Point polygon[16];
+  DRAW_MakePoint(&polygon[0], 200, 200);
+  DRAW_MakePoint(&polygon[1], 250, 200);
+  DRAW_MakePoint(&polygon[2], 275, 250);
+  DRAW_MakePoint(&polygon[3], 200, 300);
+  DRAW_MakePoint(&polygon[4], 140, 240);
+  DRAW_PutPolygon(polygon, 5);
+
+  DRAW_SetPenFore(0x2F);
+  DRAW_MakePoint(&polygon[0], 400, 300);
+  DRAW_MakePoint(&polygon[1], 375, 320);
+  DRAW_MakePoint(&polygon[2], 330, 245);
+  DRAW_PutPolygon(polygon, 3);
+
+  while(true) {};
 }
 
 uint16_t shape_x = 50;

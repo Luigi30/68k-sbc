@@ -93,7 +93,7 @@ HANDLE MEMMGR_NewHandle(uint32_t requested_size, MEMMGR_MALLOC_FLAGS flags)
 
 CPTR MEMMGR_AllocateBlock(Heap *heap, uint32_t requested_size, MEMMGR_BLOCK_FLAGS flags)
 {
-  uint32_t adjusted_size = (requested_size + MEMMGR_BLOCK_HEADER_SIZE + 4) & 0xFFFFFFF0;
+  uint32_t adjusted_size = (requested_size + MEMMGR_BLOCK_HEADER_SIZE + 8) & 0xFFFFFFF0;
 
   MEMMGR_BLOCK *block = heap->blocks;
 

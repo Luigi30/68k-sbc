@@ -25,19 +25,23 @@ typedef enum {
 } TASK_Heap;
 
 typedef struct {
-  Node node;
   TASK_State state;
   TASK_Heap heap;  // which heap are we using?
   CPTR stack_low;  // the bottom of the application's stack
   CPTR stack_high; // the top of the application's stack
   CPTR stack_pointer; // the application's SP at last execution
   CPTR entry_point;
-  
-  uint32_t registers[16];
+  //  Heap *task_heap;
+
   uint16_t status_register;
   uint32_t pc;
+  uint32_t registers[16];
+  
+} TaskInfo;
 
-  Heap *task_heap;
+typedef struct {
+  Node node;
+  TaskInfo *info;
 } Task;
 
 extern List *TASK_List;

@@ -8,13 +8,13 @@
 *	BYTE	LN_PRI	; Priority, for sorting
 *	APTR	LN_NAME	; ID string, null terminated
 *	LABEL	LN_SIZE	; Note: word aligned
-
-LN_SUCC	equ 0
-LN_PRED	equ 4
-LN_TYPE	equ 8
-LN_PRI	equ 9
-LN_NAME equ 10
-LN_SIZE	equ 26
+	
+*LN_SUCC	equ 0
+*LN_PRED	equ 4
+*LN_TYPE	equ 8
+*LN_PRI	equ 9
+*LN_NAME equ 10
+*LN_SIZE	equ 26
 
 ; minimal node -- no type checking possible
 *   STRUCTURE	MLN,0	; Minimal List Node
@@ -22,9 +22,9 @@ LN_SIZE	equ 26
 *	APTR	MLN_PRED
 *	LABEL	MLN_SIZE
 
-MLN_SUCC	equ 0
-MLN_PRED	equ 4
-MLN_TYPE	equ 8
+*MLN_SUCC	equ 0
+*MLN_PRED	equ 4
+*MLN_TYPE	equ 8
 
 *STRUCTURE	LH,0
 *	APTR	LH_HEAD
@@ -34,12 +34,12 @@ MLN_TYPE	equ 8
 *	UBYTE	LH_pad
 *	LABEL	LH_SIZE ;word aligned
 
-LH_HEAD		equ 0
-LH_TAIL		equ 4
-LH_TAILPRED equ 8
-LH_TYPE		equ 12
-LH_pad		equ 13
-LH_SIZE		equ 14
+*LH_HEAD		equ 0
+*LH_TAIL		equ 4
+*LH_TAILPRED equ 8
+*LH_TYPE		equ 12
+*LH_pad		equ 13
+*LH_SIZE		equ 14
 
 *
 * Minimal List Header - no type checking (best for most applications)
@@ -50,10 +50,50 @@ LH_SIZE		equ 14
 *	APTR	MLH_TAILPRED
 *	LABEL	MLH_SIZE ;longword aligned
 
-MLH_HEAD	 equ 0
-MLH_TAIL	 equ 4
-MLH_TAILPRED equ 8
-MLH_SIZE	 equ 12
+*MLH_HEAD	 equ 0
+*MLH_TAIL	 equ 4
+*MLH_TAILPRED equ 8
+*MLH_SIZE	 equ 12
+
+	include 'c_types.i'
+
+***********************************************
+
+	STRUCTURE	LN,0		; List Node
+	APTR	LN_SUCC			; Pointer to next (successor)
+	APTR	LN_PRED			; Pointer to previous (predecessor)
+	UBYTE	LN_TYPE
+	BYTE	LN_PRI				; Priority, for sorting
+	APTR	LN_NAME				; ID string, null terminated
+	LABEL	LN_SIZE				; Note: word aligned
+
+	;;  minimal node -- no type checking possible
+	STRUCTURE	MLN,0		; Minimal List Node
+	APTR	MLN_SUCC
+	APTR	MLN_PRED
+	LABEL	MLN_SIZE
+
+	*
+	* Full featured list header
+	*
+	STRUCTURE	LH,0
+	APTR	LH_HEAD
+	APTR	LH_TAIL
+	APTR	LH_TAILPRED
+	UBYTE	LH_TYPE
+	UBYTE	LH_pad
+	LABEL	LH_SIZE 			;word aligned
+
+	*
+	* Minimal List Header - no type checking (best for most applications)
+	*
+	STRUCTURE	MLH,0
+	APTR	MLH_HEAD
+	APTR	MLH_TAIL
+	APTR	MLH_TAILPRED
+	LABEL	MLH_SIZE 			;longword aligned
+
+***********************************************
 
 	xdef	_LIST_AddHead
 	xdef	_LIST_AddTail
