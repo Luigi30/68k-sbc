@@ -22,9 +22,23 @@ void DEVICE_PrintAllDevices()
 
 void DEVICE_DoCommand(uint8_t *device_name, uint8_t command_index)
 {
-  //TODO: look up the device. and the command. lol.
+  /*
   DEVICE_Device *dev = (DEVICE_Device *)DEVICE_ActiveDevs.lh_Head;
+  */
+  DEVICE_Device *dev;
+  for(dev = DEVICE_ActiveDevs.lh_Head; dev->dev_node.ln_Succ != NULL; dev = dev->dev_node.ln_Succ)
+	{
+	  if(strcmp(dev->long_name, device_name) == 0)
+		{
+		  printf("Found device %s at %06X\n", dev->long_name, dev);
+		  break;
+		}
+	  else
+		printf("device %s is not device %s\n", dev->long_name, device_name);
+	}
 
-  printf("DEVICE_DoCommand: execute command index %d on device %s\n", command_index, device_name);
+  
+  printf("DEVICE_DoCommand: execute command index %d on device %s.\n", command_index, device_name);
+  printf("Jumping to function at %06X. Command list is at %06X\n", dev->functions[0], dev->functions);
   dev->functions[0]();
 }

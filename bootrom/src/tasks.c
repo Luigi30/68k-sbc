@@ -28,7 +28,7 @@ void TASK_InitSubsystem()
   
   //printf("List at %x is initialized\n", TASK_List);
   MMIO8(0x600017) = 0x40; // MFP vectors now begin at number 64
-  MMIO8(0x600007) = 0x20; // enable TIMER A interrupt
+  MMIO8(0x600007) = MMIO8(0x600007) | 0x20; // enable TIMER A interrupt
   
   // Set TIMER A for delay mode, 200 prescaler
   MMIO8(0x600019) = 0x10 | 0x07;
@@ -182,13 +182,13 @@ Task *TASK_GetRunningTask()
 void TASK_ForbidInterrupts()
 {
   // Disable the timer interrupt during *sensitive* operations.
-  MMIO8(0x600013) = 0x00;
+  MMIO8(0x600013) = MMIO8(0x600013) & 0xDF;
 }
 
 void TASK_AllowInterrupts()
 {
   // Enable the timer interrupt, allowing timeslices to be processed.
-  MMIO8(0x600013) = 0x20;
+  MMIO8(0x600013) = MMIO8(0x600013) | 0x20;
 }
 
 Task *TASK_FindReadyTask()

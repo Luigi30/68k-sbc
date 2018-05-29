@@ -5,7 +5,7 @@ DEVICE_CommandFunctions DEVICE_MouseCommands[] = { DEVICE_Mouse_DoSomething };
 DEVICE_Mouse *DEVICE_Mouse_Create()
 {
   DEVICE_Mouse *mouse = MEMMGR_NewPtr(sizeof(DEVICE_Mouse), H_SYSHEAP);
-  strcpy(mouse->device.long_name, DEVNAME_MOUSE);
+  strcpy(mouse->device.long_name, "mouse.device");
   mouse->device.logical_unit_number = 0;
   mouse->device.functions = DEVICE_MouseCommands;
   mouse->device.is_open = 0;

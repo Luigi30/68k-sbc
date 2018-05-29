@@ -143,7 +143,7 @@ VEC_MFP_10:
 VEC_MFP_11:
 	dc.l	_bios_start
 VEC_MFP_12:
-	dc.l	_bios_start
+	dc.l	_isr_recv_buffer_full
 VEC_MFP_13:
 	dc.l	_isr_timera
 VEC_MFP_14:
@@ -169,6 +169,9 @@ _isr_mfp:
 _isr_timera:	
 	jmp	_TIMERA_ISR
 
+_isr_recv_buffer_full:
+	jmp	_RECV_BUFFER_ISR
+	
 	even
 _isr_spurious:
 	movem.l	a0-a6/d0-d7,-(sp)

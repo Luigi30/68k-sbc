@@ -18,38 +18,21 @@ extern void DRAW_ScreenFill(__reg("d0") uint8_t color);
 void MonitorTask();
 void VGATask();
 
-/* task testing */
-int x = 0;
-void testtask1()
-{
-  int y = 0;
-
-  while(true)
-	{
-	  x++;
-	  y--;
-	  printf("testtask1: shared var is %d, non-shared is %d\n", x);
-	};
-}
-
-void testtask2()
-{
-  int y = 0;
-
-  while(true)
-	{
-	  x++;
-	  y++;
-	  printf("testtask2: shared var is %d, non-shared is %d\n", x);
-	};
-}
-
 void Monitor_Go()
 {  
   DRAW_Init();
   VGACON_Init();
   TASK_InitSubsystem();
 
+  MMIO8(0x600007) = MMIO8(0x600007) | 0x10; // enable MFP serial input interrupt
+  MMIO8(0x600013) = MMIO8(0x600013) | 0x10; // enable MFP serial input interrupt
+  DEVICE_InitSubsystem();
+  DEVICE_Mouse_Create();
+  DEVICE_Keyboard_Create();
+  DEVICE_PrintAllDevices();
+
+  DEVICE_DoCommand("keyboard.device", CMD_OPEN);
+  
   Task *task1 = MEMMGR_NewPtr(sizeof(Task)+8, H_SYSHEAP);
   TaskInfo *task1_info = MEMMGR_NewPtr(sizeof(TaskInfo), H_SYSHEAP);
   task1->info = task1_info;
@@ -69,9 +52,6 @@ void Monitor_Go()
   printf("Waiting for scheduler...\n");  
   while(true) {};
   
-  DEVICE_InitSubsystem();
-  DEVICE_Mouse_Create();
-  DEVICE_PrintAllDevices();
   DEVICE_DoCommand("dev-mouse", 0);
   
   MOUSE_SetupCOM1();
@@ -315,4 +295,30 @@ void ISR_Spurious()
 {
   //just for now
   printf("*** SPURIOUS INTERRUPT ***\n");
+}
+
+/* task testing */
+int x = 0;
+void testtask1()
+{
+  int y = 0;
+
+  while(true)
+	{
+	  x++;
+	  y--;
+	  printf("testtask1: shared var is %d, non-shared is %d\n", x);
+	};
+}
+
+void testtask2()
+{
+  int y = 0;
+
+  while(true)
+	{
+	  x++;
+	  y++;
+	  printf("testtask2: shared var is %d, non-shared is %d\n", x);
+	};
 }

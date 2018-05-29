@@ -21,7 +21,7 @@ $(BINDIR)/bootrom.s68:	$(OBJDIR)/crt0.o $(OBJDIR)/sysvars.o $(OBJDIR)/bootrom.o 
 				    	$(OBJDIR)/memmgr.o $(OBJDIR)/dispatch.o $(OBJDIR)/osfunc.o $(OBJDIR)/elf.o $(OBJDIR)/print.o $(OBJDIR)/vga.o \
 						$(OBJDIR)/fastdraw.o $(OBJDIR)/fastdraw_asm.o $(OBJDIR)/vga_asm.o $(OBJDIR)/fastdraw/linedraw.o \
 						$(OBJDIR)/vgaconsole.o $(OBJDIR)/mouse.o $(OBJDIR)/mouse_asm.o $(OBJDIR)/nodelist.o $(OBJDIR)/nodelist_asm.o \
-						 $(OBJDIR)/devices/devices.o $(OBJDIR)/devices/mouse.o $(OBJDIR)/gfx/gfx.o ../libc/bin/libc68k.a
+						 $(OBJDIR)/devices/devices.o $(OBJDIR)/devices/mouse.o $(OBJDIR)/devices/keyboard.o $(OBJDIR)/gfx/gfx.o ../libc/bin/libc68k.a
 
 	vlink $(LDFLAGS) -lc68k -o $(BINDIR)/bootrom.s68 $^
 	cp bin/bootrom.s68 /mnt/c/EASy68K/

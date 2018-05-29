@@ -1,6 +1,9 @@
 	public _MFP_ISR
 	public _TIMERA_ISR
+	public _RECV_BUFFER_ISR
 
+	public _RECV_BUFFER_VECTOR
+	
 	public _ExecutingTaskRegisters
 	public _NewTaskRegisters
 	
@@ -17,6 +20,23 @@ _MFP_ISR:
 	movem.l	(sp)+,a0-a7/d0-d7
 	rts
 
+_RECV_BUFFER_ISR:
+	movem.l	a0-a7/d0-d7,-(sp)
+
+	;; Acknowledge the interrupt
+	move.b	MFPISRA,d0
+	andi.b	#$EF,d0
+	move.b	d0,MFPISRA
+
+	;; Has anything hooked this interrupt?
+	cmp.l	#0,_RECV_BUFFER_VECTOR
+	beq		.done 				; no, so we're done
+	jsr		_RECV_BUFFER_VECTOR
+
+.done:
+	movem.l (sp)+,a0-a7/d0-d7
+	rte
+	
 _TIMERA_ISR:
 	;; Back up the current registers.
 	move.l	a0,_ExecutingTaskRegisters+0
@@ -70,3 +90,6 @@ _TIMERA_ISR:
 	move.w	_SFRAME_SR,(sp)
 	move.l	_SFRAME_PC,2(sp)
 	rte
+
+	data
+_RECV_BUFFER_VECTOR dc.l 0
