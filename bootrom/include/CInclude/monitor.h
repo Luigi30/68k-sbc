@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "devices/devices.h"
+#include "devices/keyboard.h"
 #include "devices/mouse.h"
 #include "devices/serial.h"
 #include "fat.h"

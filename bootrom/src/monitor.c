@@ -31,6 +31,14 @@ void Monitor_Go()
   DEVICE_Keyboard_Create();
   DEVICE_PrintAllDevices();
 
+  printf("Testing message queue\n");
+  DEVICE_Device *kbd = DEVICE_FindDeviceByName("keyboard.device");
+  printf("Creating a message\n");
+  KBD_KeyEvent *msg = IPC_CreateMessage(sizeof(KBD_KeyEvent), NULL);
+  msg->keycode = 0x41;
+  printf("Sending a message at %06X to port %06X\n", msg, kbd->message_port.message_queue);
+  IPC_SendMessage(msg, kbd->message_port.message_queue);
+  
   DEVICE_DoCommand("keyboard.device", CMD_OPEN);
   
   Task *task1 = MEMMGR_NewPtr(sizeof(Task)+8, H_SYSHEAP);

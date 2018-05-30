@@ -7,12 +7,14 @@
 #include <stdint.h>
 
 #include "devices/devices.h"
+#include "messages.h"
 #include "memmgr.h"
 #include "nodelist.h"
 
 #define DEVNAME_KEYBOARD "keyboard.device"
 
 typedef struct {
+  IPC_Message message;
   uint8_t keycode;
 } KBD_KeyEvent;
 
@@ -20,7 +22,9 @@ typedef struct {
   DEVICE_Device device;
 } DEVICE_Keyboard;
 
-List *KBD_InputQueue;
+extern List KBD_InputQueue;
+
+DEVICE_Keyboard *DEVICE_Keyboard_Create();
 
 void KBD_DeviceOpen();
 void KBD_DeviceClose();

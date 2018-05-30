@@ -2,6 +2,8 @@
 #define DEVICES_DEVICES_H
 
 #include <stdint.h>
+
+#include "messages.h"
 #include "nodelist.h"
 
 /* Commands that all devices must process. */
@@ -18,7 +20,8 @@ typedef void(*DEVICE_CommandFunctions)(void);
 typedef struct {
   Node dev_node;
   DEVICE_CommandFunctions *functions;
-  uint8_t long_name[16];
+  uint8_t *name;
+  IPC_MessagePort message_port;
   uint8_t logical_unit_number;
   uint8_t is_open;
   uint8_t is_active;
@@ -29,5 +32,7 @@ extern List DEVICE_ActiveDevs;
 void DEVICE_InitSubsystem();
 void DEVICE_PrintAllDevices();
 void DEVICE_DoCommand(uint8_t *device_name, uint8_t command_index);
+
+DEVICE_Device *DEVICE_FindDeviceByName(uint8_t *device_name);
 
 #endif
