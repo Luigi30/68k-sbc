@@ -29,7 +29,7 @@ $(OBJDIR)/%.s: $(SRCDIR)/%.c $(INCDIR)/%.h
 	$(CC) $(CFLAGS) -o=$@ $<
 
 $(BINDIR)/libc68k.a: $(OBJS)
-	ar rcs $@ $^
+	m68k-elf-ar rcs $@ $^
 
 .PHONY: clean
 

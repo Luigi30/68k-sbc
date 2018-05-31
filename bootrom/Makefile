@@ -24,8 +24,8 @@ $(BINDIR)/bootrom.s68:	$(OBJDIR)/crt0.o $(OBJDIR)/sysvars.o $(OBJDIR)/bootrom.o 
 						 $(OBJDIR)/devices/devices.o $(OBJDIR)/devices/mouse.o $(OBJDIR)/devices/keyboard.o $(OBJDIR)/messages.o $(OBJDIR)/gfx/gfx.o ../libc/bin/libc68k.a
 
 	vlink $(LDFLAGS) -lc68k -o $(BINDIR)/bootrom.s68 $^
-	cp bin/bootrom.s68 /mnt/c/EASy68K/
-	m68k-atari-mint-objcopy -I srec -O binary $@ --pad-to=0x100000 /mnt/c/msys64/home/Luigi/mame/roms/luigisbc/68000.bin
+#	cp bin/bootrom.s68 /mnt/c/EASy68K/
+	m68k-elf-objcopy -I srec -O binary $@ --pad-to=0x100000 ~/mame/roms/luigisbc/68000.bin
 
 # Assemble any ASM source we already have.
 $(OBJDIR)/%.o: $(SRCDIR)/%.s
@@ -51,4 +51,5 @@ clean:
 	rm -f obj/*.o obj/*.s bin/* obj/gfx/*.o
 
 run:
-	/mnt/c/msys64/home/Luigi/mame/mame64.exe luigisbc -debug -window -rompath /mnt/c/msys64/home/Luigi/mame/roms
+#	/mnt/c/msys64/home/Luigi/mame/mame64.exe luigisbc -debug -window -rompath /mnt/c/msys64/home/Luigi/mame/roms
+	~/mame/mame64 luigisbc -debug -window -rompath ~/mame/roms
