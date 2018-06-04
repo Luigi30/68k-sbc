@@ -1,4 +1,4 @@
-.PHONY: all clean
+.PHONY: all clean symbols
 
 all:
 	make -C ./libc
@@ -7,3 +7,7 @@ all:
 clean:
 	make -C ./bootrom clean
 	make -C ./libc clean
+
+symbols:
+	make -C ./bootrom symbols
+	@echo "libc symbols are TODO"

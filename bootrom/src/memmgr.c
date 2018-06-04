@@ -63,7 +63,7 @@ CPTR MEMMGR_NewPtr(uint32_t requested_size, MEMMGR_MALLOC_FLAGS flags)
   CPTR block = MEMMGR_AllocateBlock(heap, requested_size, MEMMGR_BLOCK_FLAG_FIXED);
 
   // Return the block's data area
-  return (char *)(block) + 20;
+  return (char *)(block) + sizeof(MEMMGR_BLOCK);
 }
 
 int MEMMGR_DisposePtr(CPTR p)
@@ -93,7 +93,7 @@ HANDLE MEMMGR_NewHandle(uint32_t requested_size, MEMMGR_MALLOC_FLAGS flags)
 
 CPTR MEMMGR_AllocateBlock(Heap *heap, uint32_t requested_size, MEMMGR_BLOCK_FLAGS flags)
 {
-  uint32_t adjusted_size = (requested_size + MEMMGR_BLOCK_HEADER_SIZE + 8) & 0xFFFFFFF0;
+  uint32_t adjusted_size = (requested_size + sizeof(MEMMGR_BLOCK));
 
   MEMMGR_BLOCK *block = heap->blocks;
 

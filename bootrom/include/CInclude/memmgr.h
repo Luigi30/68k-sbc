@@ -1,6 +1,7 @@
 #ifndef MEMMGR_H__
 #define MEMMGR_H__
 
+#include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -40,7 +41,7 @@ typedef struct memmgr_heap_t
   struct memmgr_heap_t *next;
   struct memmgr_heap_t *previous;
   CPTR *master_pointers;
-  uint32_t size;
+  uint32_t size; 
   MEMMGR_BLOCK *blocks;
 } Heap;
 

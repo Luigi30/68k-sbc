@@ -36,9 +36,8 @@ void Monitor_Go()
   printf("Creating a message\n");
   KBD_KeyEvent *msg = IPC_CreateMessage(sizeof(KBD_KeyEvent), NULL);
   msg->keycode = 0x41;
-  printf("Sending a message at %06X to port %06X\n", msg, kbd->message_port.message_queue);
-  IPC_SendMessage(msg, kbd->message_port.message_queue);
-  
+  printf("Sending a message at %06X to port %06X\n", msg, &(kbd->message_port));
+  IPC_SendMessage(msg, &(kbd->message_port));
   DEVICE_DoCommand("keyboard.device", CMD_OPEN);
   
   Task *task1 = MEMMGR_NewPtr(sizeof(Task)+8, H_SYSHEAP);
@@ -94,7 +93,7 @@ void Monitor_Go()
   //DRAW_PutString("Hello! I present really slow text printing.", &fixedsys12, 0, 0);
   //DRAW_PutString("With multiple fonts!", &F_8bitpusab12, 0, 16);
   
-  while(TRUE)
+  while(true)
 	{
 	  if(VGA_IsInVBLANK())
 		DEMO_ProcessNextFrame();
@@ -105,11 +104,13 @@ void MonitorTask()
 {
   while(true)
 	{
+    /*
 	  if(Monitor_WaitForEntry())
 		{
 		  Monitor_ProcessEntry();
 		  Monitor_InitPrompt();
 		}
+    */
 	}
 }
 

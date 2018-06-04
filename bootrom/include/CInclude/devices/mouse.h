@@ -7,8 +7,6 @@
 #include "devices/devices.h"
 #include "nodelist.h"
 
-#define DEVNAME_MOUSE "mouse.device"
-
 typedef struct {
   DEVICE_Device device;
 } DEVICE_Mouse;

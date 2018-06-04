@@ -1,5 +1,7 @@
 #include "devices/mouse.h"
 
+const uint8_t DEVNAME_MOUSE[] = "mouse.device";
+
 DEVICE_CommandFunctions DEVICE_MouseCommands[] = { DEVICE_Mouse_DoSomething };
 
 DEVICE_Mouse *DEVICE_Mouse_Create()
@@ -9,8 +11,7 @@ DEVICE_Mouse *DEVICE_Mouse_Create()
   mouse->device.functions = DEVICE_MouseCommands;
   mouse->device.is_open = 0;
 
-  mouse->device.name = MEMMGR_NewPtr(32, H_SYSHEAP);
-  strcpy(mouse->device.name, "mouse.device");
+  mouse->device.name = DEVNAME_MOUSE;
   
   LIST_AddHead(&DEVICE_ActiveDevs, mouse);
 

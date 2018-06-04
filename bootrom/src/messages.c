@@ -1,5 +1,7 @@
 #include "messages.h"
 
+#include "tasks/tasks.h"
+
 IPC_Message *IPC_CreateMessage(uint16_t _length, IPC_MessagePort *_reply_to)
 {
   IPC_Message *msg = MEMMGR_NewPtr(_length, H_SYSHEAP); // TODO: app heap?

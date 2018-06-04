@@ -11,8 +11,6 @@
 #include "memmgr.h"
 #include "nodelist.h"
 
-#define DEVNAME_KEYBOARD "keyboard.device"
-
 typedef struct {
   IPC_Message message;
   uint8_t keycode;

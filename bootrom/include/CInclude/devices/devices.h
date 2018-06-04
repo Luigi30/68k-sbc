@@ -5,6 +5,7 @@
 
 #include "messages.h"
 #include "nodelist.h"
+#include "tasks/tasks.h"
 
 /* Commands that all devices must process. */
 #define CMD_OPEN 0     // Add 1 to the Open count. Initialize the device if required.
@@ -25,6 +26,7 @@ typedef struct {
   uint8_t logical_unit_number;
   uint8_t is_open;
   uint8_t is_active;
+  Task *task;
 } DEVICE_Device;
 
 extern List DEVICE_ActiveDevs;

@@ -30,6 +30,7 @@ DEVICE_Device *DEVICE_FindDeviceByName(uint8_t *device_name)
 		  return dev;
 		}
 	}
+	printf("DEVICE: Could not find device named %s in device list!\n", device_name);
   return NULL;
 }
 

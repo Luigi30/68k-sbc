@@ -8,6 +8,8 @@
 #include "memmgr.h"
 #include "nodelist.h"
 
+typedef struct Task Task;
+
 typedef struct {
   uint8_t *name;
   List *message_queue;

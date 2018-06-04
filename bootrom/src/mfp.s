@@ -29,9 +29,10 @@ _RECV_BUFFER_ISR:
 	move.b	d0,MFPISRA
 
 	;; Has anything hooked this interrupt?
-	cmp.l	#0,_RECV_BUFFER_VECTOR
+	move.l	_RECV_BUFFER_VECTOR,a0
+	cmp.l	#0,a0
 	beq		.done 				; no, so we're done
-	jsr		_RECV_BUFFER_VECTOR
+	jsr		(a0)
 
 .done:
 	movem.l (sp)+,a0-a7/d0-d7

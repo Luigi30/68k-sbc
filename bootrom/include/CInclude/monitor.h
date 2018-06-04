@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "devices/devices.h"
 #include "devices/keyboard.h"
@@ -8,11 +9,12 @@
 #include "fat.h"
 #include "elf.h"
 #include "memmgr.h"
-#include "tasks.h"
 #include "fastdraw.h"
 #include "fastdraw/linedraw.h"
 #include "vgaconsole.h"
 #include "mouse.h"
+
+#include "tasks/tasks.h"
 
 void Monitor_DrawBanner();
 void Monitor_InitPrompt();
