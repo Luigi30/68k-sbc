@@ -1,0 +1,18 @@
+{
+    // Configure glob patterns for excluding files and folders. For example, the files explorer decides which files and folders to show or hide based on this setting.
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true
+    },
+    "files.associations": {
+        "monitor.h": "c",
+        "serial.h": "c",
+        "keyboard.h": "c",
+        "memmgr.h": "c",
+        "signals.h": "c",
+        "tasks.h": "c"
+    },
+}

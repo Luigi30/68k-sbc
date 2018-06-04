@@ -28,4 +28,6 @@ void KBD_DeviceOpen();
 void KBD_DeviceClose();
 void KBD_InterruptHandler();
 
+void KBD_Task();
+
 #endif

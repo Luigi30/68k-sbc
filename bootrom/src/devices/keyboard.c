@@ -30,6 +30,12 @@ DEVICE_Keyboard *DEVICE_Keyboard_Create()
 
   //TODO: install keyboard interrupt handler that places keypresses in a queue
   RECV_BUFFER_VECTOR = (void *)KBD_InterruptHandler;
+
+  kbd->device.task = MEMMGR_NewPtr(sizeof(Task)+8, H_SYSHEAP);
+  TaskInfo *kbd_taskinfo = MEMMGR_NewPtr(sizeof(TaskInfo), H_SYSHEAP);
+  kbd->device.task->info = kbd_taskinfo;
+  kbd->device.task->info->heap = TASK_SYSHEAP;
+  TASK_Add(kbd->device.task, KBD_Task, 0, 4096);
   
   printf("DEVICE: Created device: %s. Device is at %06X\n", kbd->device.name, kbd);
 
@@ -53,15 +59,21 @@ void KBD_InterruptHandler()
   DEVICE_Device *kbd = DEVICE_FindDeviceByName("keyboard.device");
   KBD_KeyEvent *msg = IPC_CreateMessage(sizeof(KBD_KeyEvent), NULL);
   msg->keycode = serial_in();
+
+  // TODO: shouldn't IPC_SendMessage inform the receiving task?
   IPC_SendMessage(msg, &(kbd->message_port));
+  SIGNAL_Send(DEVICE_FindDeviceByName("keyboard.device")->task, SIG_MESSAGE);
 }
 
 void KBD_Task()
 {
   while(true)
   {
-    printf("KBD_Task is executing...\n");
-    
-    TASK_WaitForMessage();    
+    printf("* KBD_Task *\n");
+
+    IPC_Message *msg = IPC_GetMessage();
+    printf("%c\n", ((KBD_KeyEvent *)msg)->keycode);
+
+    TASK_WaitForMessage();
   }  
 }

@@ -23,5 +23,6 @@ typedef struct {
 
 IPC_Message *IPC_CreateMessage(uint16_t _length, IPC_MessagePort *_reply_to);
 void IPC_SendMessage(IPC_Message *message, IPC_MessagePort *destination);
+IPC_Message * IPC_GetMessage();
 
 #endif

@@ -50,7 +50,7 @@ void Monitor_Go()
   task2->info = MEMMGR_NewPtr(sizeof(TaskInfo), H_SYSHEAP);
   task2->info->heap = TASK_SYSHEAP;
   
-  TASK_Add(task1, MonitorTask, NULL, 4096);
+  //TASK_Add(task1, MonitorTask, NULL, 4096);
   TASK_Add(task2, VGATask, NULL, 4096);
   
   TASK_EnableSwitching(1);
