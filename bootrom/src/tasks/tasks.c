@@ -212,10 +212,17 @@ void TASK_WaitForMessage()
   // Atomic operation.
   TASK_ForbidInterrupts();
   
-  printf("Task %06X is now waiting for a message\n", running_task);
-  running_task->info->state = TASK_WAITING;
-  running_task->info->signals.waiting |= SIG_MESSAGE;
-  printf("Task %06X is no longer ready\n", running_task);
+  if(running_task == NULL)
+  {
+    printf("Running task is NULL\n");
+  }
+  else
+  {
+    printf("Task %06X is now waiting for a message\n", running_task);
+    running_task->info->state = TASK_WAITING;
+    running_task->info->signals.waiting |= SIG_MESSAGE;
+    printf("Task %06X is no longer ready\n", running_task);
+  }
 
   MMIO8(0x60000B) |= 0x20; // Trigger a context switch.
 }
