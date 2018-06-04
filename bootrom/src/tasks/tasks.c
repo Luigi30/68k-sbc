@@ -135,15 +135,18 @@ void TASK_ContextSwitch(Task *new_task)
 	  current_task->info->pc = SFRAME_PC;
 	  current_task->info->status_register = SFRAME_SR;
 
-	  //printf("Adding task %x to ReadyList\n", current_task);
-	  LIST_AddTail(TASK_ReadyList, current_task);
-
     // If something forced this task to wait, then it won't be in RUNNING state and we don't want it to be READY.
     if(current_task->info->state == TASK_RUNNING)
     {
       current_task->info->state = TASK_READY;
+      //printf("Adding task %x to ReadyList\n", current_task);
+      LIST_AddTail(TASK_ReadyList, current_task);
     }
-	  
+    else if(current_task->info->state == TASK_READY)
+    {
+      //printf("Adding task %x to ReadyList\n", current_task);
+      LIST_AddTail(TASK_ReadyList, current_task);
+    }
 	}
 
   TASK_RestoreRegisters(new_task);
