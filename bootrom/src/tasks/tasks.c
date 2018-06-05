@@ -223,6 +223,7 @@ void TASK_WaitForMessage()
     running_task->info->signals.waiting |= SIG_MESSAGE;
     printf("Task %06X is no longer ready\n", running_task);
 
+    // This doesn't work - we end up with a loop in the waiting list.
     LIST_Remove(TASK_ReadyList, running_task);
     LIST_AddTail(TASK_WaitingList, running_task);
   }
