@@ -26,9 +26,15 @@ $(BINDIR)/bootrom.s68:	$(OBJDIR)/crt0.o $(OBJDIR)/sysvars.o $(OBJDIR)/bootrom.o 
 						$(OBJDIR)/tasks/tasks.o $(OBJDIR)/tasks/signals.o \
 						$(OBJDIR)/gfx/gfx.o ../libc/bin/libc68k.a
 
+	-mv $(SRCDIR)/*.ic1 ic1dir
+	-mv $(SRCDIR)/devices/*.ic1 ic1dir/devices
+	-mv $(SRCDIR)/tasks/*.ic1 ic1dir/tasks
+	-mv $(SRCDIR)/gfx/*.ic1 ic1dir/gfx
+
 	vlink $(ELFFLAGS) -lc68k -o $(BINDIR)/bootrom.elf $^
 	vlink $(LDFLAGS) -lc68k -o $(BINDIR)/bootrom.s68 $^
 	m68k-elf-objcopy -I srec -O binary $@ --pad-to=0x100000 ~/mame/roms/luigisbc/68000.bin
+
 
 # Assemble any ASM source we already have.
 $(OBJDIR)/%.o: $(SRCDIR)/%.s
@@ -36,6 +42,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.s
 
 # Compile the C files then assemble the output.
 $(OBJDIR)/%.s: $(SRCDIR)/%.c
+	$(CC) $(CFLAGS) -ic1 -o=$@ $<
 	$(CC) $(CFLAGS) -o=$@ $<
 
 $(OBJDIR)/%.o: $(OBJDIR)/%.s

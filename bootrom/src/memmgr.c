@@ -186,6 +186,7 @@ void MEMMGR_DumpHeapBlocks(Heap *heap)
 
 CPTR MEMMGR_GetUnusedMasterPointer(Heap *heap)
 {
+  printf("master\n");
    for(int i=0;i<MASTER_POINTER_COUNT;i++)
 	{
 	  if(heap->master_pointers[i] == NULL)

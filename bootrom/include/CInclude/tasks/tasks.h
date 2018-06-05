@@ -47,7 +47,7 @@ typedef struct Task {
   TaskInfo *info;
 } Task;
 
-extern List *TASK_List;
+extern List *TASK_WaitingList;
 extern List *TASK_ReadyList;
 
 void TASK_InitSubsystem();

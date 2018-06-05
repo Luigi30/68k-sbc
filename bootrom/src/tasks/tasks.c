@@ -6,7 +6,7 @@ uint32_t SFRAME_PC = 0;
 
 uint8_t TASK_SwitchingEnabled = 0;
 
-List *TASK_List;
+List *TASK_WaitingList;
 List *TASK_ReadyList;
 
 extern void LIST_AddHead(__reg("a0") List *list, __reg("a1") Node *node);
@@ -20,8 +20,8 @@ Task *running_task = NULL;
 
 void TASK_InitSubsystem()
 {
-  TASK_List = MEMMGR_NewPtr(sizeof(List), H_SYSHEAP);
-  LIST_Init(TASK_List, 0);
+  TASK_WaitingList = MEMMGR_NewPtr(sizeof(List), H_SYSHEAP);
+  LIST_Init(TASK_WaitingList, 0);
 
   TASK_ReadyList = MEMMGR_NewPtr(sizeof(List), H_SYSHEAP);
   LIST_Init(TASK_ReadyList, 0);
@@ -67,16 +67,10 @@ void TASK_Add(Task *task,
   task->info->stack_high = (CPTR)((uint32_t)task->info->stack_low + stack_size - 8);
   task->info->stack_pointer = task->info->stack_high;
   
-  LIST_AddTail(TASK_List, (Node *)task);
-  LIST_AddTail(TASK_ReadyList, (Node *)task);
-  printf("TASK: Task %x added to task list. Task's SP is %x\n",
+  LIST_AddTail(TASK_ReadyList, task);
+  printf("TASK: Task %x added to ready list. Task's SP is %x\n",
 		 task,
 		 task->info->stack_pointer);
-
-  printf("*** TASK_List ***\n");
-  printf("Head: %6X, Tail: %6X\n", TASK_ReadyList->lh_Head, TASK_ReadyList->lh_Tail);
-
-  //MEMMGR_DumpHeapBlocks(&heap_system);
 }
 
 void TASK_Wait(Task *task)
@@ -107,8 +101,6 @@ void TASK_ProcessQuantum()
 	{
 	  return;
 	}
-  
-  //printf("Timeslice expired!\n");
 
   TASK_ContextSwitch(TASK_FindReadyTask());
 }
@@ -116,6 +108,10 @@ void TASK_ProcessQuantum()
 void TASK_ContextSwitch(Task *new_task)
 {
   printf("*** Context Switch to Task %06X ***\n", new_task);
+  if(new_task == running_task) {
+    printf("No task change required.\n");
+    return;
+  }
 
   //Find the running task.
   Task *current_task = running_task;
@@ -139,12 +135,12 @@ void TASK_ContextSwitch(Task *new_task)
     if(current_task->info->state == TASK_RUNNING)
     {
       current_task->info->state = TASK_READY;
-      //printf("Adding task %x to ReadyList\n", current_task);
+      printf("Adding Running task %x to ReadyList at %06X\n", current_task, TASK_ReadyList);
       LIST_AddTail(TASK_ReadyList, current_task);
     }
     else if(current_task->info->state == TASK_READY)
     {
-      //printf("Adding task %x to ReadyList\n", current_task);
+      printf("Adding Ready task %x to ReadyList at %06X\n", current_task, TASK_ReadyList);
       LIST_AddTail(TASK_ReadyList, current_task);
     }
 	}
@@ -155,7 +151,11 @@ void TASK_ContextSwitch(Task *new_task)
 
   // Re-queue the current task.
   LIST_Remove(TASK_ReadyList, new_task);
+  LIST_AddTail(TASK_ReadyList, new_task);
   running_task = new_task;
+
+  //TASK_PrintTaskList(TASK_ReadyList);
+  printf("Current task is %06X, new task is %06X\n", current_task, new_task);
 
   TASK_AllowInterrupts(); // Unmask the interrupt if it's been masked and we got here manually
 }
@@ -192,14 +192,14 @@ Task *TASK_FindReadyTask()
 
   TASK_ProcessSignals();
   //TASK_CleanReadyQueue();
-  TASK_PrintTaskList(TASK_ReadyList);
 
   for(task = TASK_ReadyList->lh_Head; task->node.ln_Succ != NULL; task = task->node.ln_Succ)
-	{
-	  if(task->info->state == TASK_READY)
-		  return task;
-	}
+  {
+    printf("Task %06X. Successor is %06X\n", task, task->node.ln_Succ);
+    return task;
+  }
 
+  printf("No tasks are ready, returning task %06X\n", running_task);
   // Nothing else is ready, so just load the current task again.
   return running_task;
 }
@@ -222,7 +222,14 @@ void TASK_WaitForMessage()
     running_task->info->state = TASK_WAITING;
     running_task->info->signals.waiting |= SIG_MESSAGE;
     printf("Task %06X is no longer ready\n", running_task);
+
+    LIST_Remove(TASK_ReadyList, running_task);
+    LIST_AddTail(TASK_WaitingList, running_task);
   }
+
+  //TASK_PrintTaskList(TASK_ReadyList);
+
+  printf("Triggering context switch\n");
 
   MMIO8(0x60000B) |= 0x20; // Trigger a context switch.
 }
@@ -233,32 +240,26 @@ void TASK_PrintTaskList(List *list)
   printf("*** start task list at %06X ***\n", list);
   for(task = list->lh_Head; task->node.ln_Succ != NULL; task = task->node.ln_Succ)
 	{
-	  if(task->info->state == TASK_READY)
-		  printf("TASK: %06X, state %d\n", task, task->info->state);
+    printf("TASK: %06X | Successor: %06X\n" task, task->node.ln_Succ);
 	}
   printf("*** end ***\n");
 }
 
 void TASK_ProcessSignals()
 {
-  // Wake up any tasks that have received signals they're waiting for.
-  for(Task *task = TASK_List->lh_Head; task->node.ln_Succ != NULL; task = task->node.ln_Succ)
+  // Wake up any waiting tasks that have received signals they're waiting for.
+  for(Task *task = TASK_WaitingList->lh_Head; task->node.ln_Succ != NULL; task = task->node.ln_Succ)
 	{
-	  if(task->info->state == TASK_WAITING)
+    printf("Task %06X is waiting. Signals Waiting: %06X | Signals Received: %06X\n", task, (task->info->signals.waiting), (task->info->signals.received));
+
+    // Check if any received signals match what we're explicitly waiting for.
+    if((task->info->signals.waiting & task->info->signals.received) != 0)
     {
-      printf("Task %06X is waiting. Signals Waiting: %06X | Signals Received: %06X\n", task, (task->info->signals.waiting), (task->info->signals.received));
+      // If so, this task is now READY.
+      task->info->state = TASK_READY;
 
-      // Check if any received signals match what we're explicitly waiting for.
-		  if((task->info->signals.waiting & task->info->signals.received) != 0)
-      {
-        // If so, this task is now READY.
-        task->info->state = TASK_READY;
-
-        printf("Task %06X is ready, adding to list at %06X\n", task, TASK_ReadyList);
-
-        // TODO: Why does this freeze? Is TASK_ReadyList getting corrupted?
-        LIST_AddTail(TASK_ReadyList, task);
-      }
+      printf("Task %06X is ready, adding to ready list at %06X\n", task, TASK_ReadyList);
+      LIST_AddTail(TASK_ReadyList, task);
     }
 	}
 }
