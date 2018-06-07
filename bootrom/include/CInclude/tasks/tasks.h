@@ -9,6 +9,8 @@
 extern uint32_t ExecutingTaskRegisters[16];
 extern uint32_t NewTaskRegisters[16];
 
+extern Task *running_task;
+
 typedef enum {
   TASK_RUNNING  = 0, // task is currently running
   TASK_READY    = 1,   // task is ready to execute
@@ -50,7 +52,7 @@ typedef struct Task {
 extern List *TASK_WaitingList;
 extern List *TASK_ReadyList;
 
-void TASK_InitSubsystem();
+extern void TASK_InitSubsystem();
 void TASK_EnableSwitching(uint8_t enable);
 
 void TASK_CleanReadyQueue();

@@ -66,7 +66,7 @@ _TIMERA_ISR:
 	andi.b	#$DF,d0
 	move.b	d0,MFPISRA
 
-	jsr		_TASK_ProcessQuantum
+	jsr		_TASK_ProcessQuantumASM
 	
 	;; Restore the registers.
 	move.l	_ExecutingTaskRegisters+0,a0

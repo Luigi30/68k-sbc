@@ -56,42 +56,7 @@
 *MLH_SIZE	 equ 12
 
 	include 'c_types.i'
-
-***********************************************
-
-	STRUCTURE	LN,0		; List Node
-	APTR	LN_SUCC			; Pointer to next (successor)
-	APTR	LN_PRED			; Pointer to previous (predecessor)
-	UBYTE	LN_TYPE
-	BYTE	LN_PRI				; Priority, for sorting
-	APTR	LN_NAME				; ID string, null terminated
-	LABEL	LN_SIZE				; Note: word aligned
-
-	;;  minimal node -- no type checking possible
-	STRUCTURE	MLN,0		; Minimal List Node
-	APTR	MLN_SUCC
-	APTR	MLN_PRED
-	LABEL	MLN_SIZE
-
-	*
-	* Full featured list header
-	*
-	STRUCTURE	LH,0
-	APTR	LH_HEAD
-	APTR	LH_TAIL
-	APTR	LH_TAILPRED
-	UBYTE	LH_TYPE
-	UBYTE	LH_pad
-	LABEL	LH_SIZE 			;word aligned
-
-	*
-	* Minimal List Header - no type checking (best for most applications)
-	*
-	STRUCTURE	MLH,0
-	APTR	MLH_HEAD
-	APTR	MLH_TAIL
-	APTR	MLH_TAILPRED
-	LABEL	MLH_SIZE 			;longword aligned
+	include 'list.i'
 
 ***********************************************
 

@@ -4,7 +4,8 @@ uint32_t ExecutingTaskRegisters[16];
 uint16_t SFRAME_SR = 0;
 uint32_t SFRAME_PC = 0;
 
-uint8_t TASK_SwitchingEnabled = 0;
+//uint8_t TASK_SwitchingEnabled = 0;
+extern uint8_t TASK_SwitchingEnabled;
 
 List *TASK_WaitingList;
 List *TASK_ReadyList;
@@ -18,6 +19,7 @@ extern Node *LIST_Remove(__reg("a0") List *list, __reg("a1") Node *node);
 
 Task *running_task = NULL;
 
+/*
 void TASK_InitSubsystem()
 {
   TASK_WaitingList = MEMMGR_NewPtr(sizeof(List), H_SYSHEAP);
@@ -33,6 +35,7 @@ void TASK_InitSubsystem()
   // Set TIMER A for delay mode, 200 prescaler
   MMIO8(0x600019) = 0x10 | 0x07;
 }
+*/
 
 void TASK_EnableSwitching(uint8_t enable)
 {
@@ -59,8 +62,7 @@ void TASK_Add(Task *task,
 	  printf("TASK_Add: Heap selection not recognized!\nLocking system.\n");
 	  while(true) {};
 	}
-
-
+  
   task->info->pc = (uint32_t)start_address;
   task->info->status_register = 0x2300; // TODO
 
@@ -68,8 +70,9 @@ void TASK_Add(Task *task,
   task->info->stack_pointer = task->info->stack_high;
   
   LIST_AddTail(TASK_ReadyList, task);
-  printf("TASK: Task %x added to ready list. Task's SP is %x\n",
+  printf("TASK: Task %x added to ready list at %06X. Task's SP is %x\n",
 		 task,
+     TASK_ReadyList
 		 task->info->stack_pointer);
 }
 

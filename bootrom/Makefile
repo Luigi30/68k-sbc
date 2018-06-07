@@ -1,5 +1,5 @@
 AS      = vasmm68k_mot
-ASFLAGS = -m68000 -align -I$(COMMONDIR)/AInclude -I$(INCDIR)/AInclude
+ASFLAGS = -m68000 -align -I$(COMMONDIR)/AInclude -I$(INCDIR)/AInclude -I$(LIBCINCDIR)/AInclude
 
 CC	= vbccm68k
 CFLAGS	= -cpu=68000 -c99 -I$(LIBCINCDIR) -I$(INCDIR)/$(CINCLUDE) -I$(COMMONDIR)/$(CINCLUDE)
@@ -23,7 +23,7 @@ $(BINDIR)/bootrom.s68:	$(OBJDIR)/crt0.o $(OBJDIR)/sysvars.o $(OBJDIR)/bootrom.o 
 						$(OBJDIR)/fastdraw.o $(OBJDIR)/fastdraw_asm.o $(OBJDIR)/vga_asm.o $(OBJDIR)/fastdraw/linedraw.o \
 						$(OBJDIR)/vgaconsole.o $(OBJDIR)/mouse.o $(OBJDIR)/mouse_asm.o $(OBJDIR)/nodelist.o $(OBJDIR)/nodelist_asm.o \
 						$(OBJDIR)/devices/devices.o $(OBJDIR)/devices/mouse.o $(OBJDIR)/devices/keyboard.o $(OBJDIR)/messages.o \
-						$(OBJDIR)/tasks/tasks.o $(OBJDIR)/tasks/signals.o \
+						$(OBJDIR)/tasks/tasks.o $(OBJDIR)/tasks/signals.o $(OBJDIR)/tasks/tasks_asm.o \
 						$(OBJDIR)/gfx/gfx.o ../libc/bin/libc68k.a
 
 	-mv $(SRCDIR)/*.ic1 ic1dir
