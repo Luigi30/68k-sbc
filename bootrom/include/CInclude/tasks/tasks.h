@@ -64,6 +64,9 @@ void TASK_RestoreRegisters(Task *new_task);
 
 void TASK_WaitForMessage(); // implicit argument is the current active task
 
+void TASK_ForbidInterrupts()
+void TASK_AllowInterrupts()
+
 struct Task * TASK_FindReadyTask();
 struct Task * TASK_GetRunningTask();
 

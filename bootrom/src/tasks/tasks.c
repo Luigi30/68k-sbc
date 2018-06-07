@@ -4,8 +4,8 @@ uint32_t ExecutingTaskRegisters[16];
 uint16_t SFRAME_SR = 0;
 uint32_t SFRAME_PC = 0;
 
-//uint8_t TASK_SwitchingEnabled = 0;
 extern uint8_t TASK_SwitchingEnabled;
+extern Task *TASK_RunningTask;
 
 List *TASK_WaitingList;
 List *TASK_ReadyList;
@@ -16,8 +16,6 @@ extern void LIST_AddTail(__reg("a0") List *list, __reg("a1") Node *node);
 extern Node *LIST_RemHead(__reg("a0") List *list);
 extern Node *LIST_RemTail(__reg("a0") List *list);
 extern Node *LIST_Remove(__reg("a0") List *list, __reg("a1") Node *node);
-
-Task *running_task = NULL;
 
 /*
 void TASK_InitSubsystem()
@@ -62,7 +60,7 @@ void TASK_Add(Task *task,
 	  printf("TASK_Add: Heap selection not recognized!\nLocking system.\n");
 	  while(true) {};
 	}
-  
+
   task->info->pc = (uint32_t)start_address;
   task->info->status_register = 0x2300; // TODO
 
@@ -111,13 +109,13 @@ void TASK_ProcessQuantum()
 void TASK_ContextSwitch(Task *new_task)
 {
   printf("*** Context Switch to Task %06X ***\n", new_task);
-  if(new_task == running_task) {
+  if(new_task == TASK_RunningTask) {
     printf("No task change required.\n");
     return;
   }
 
   //Find the running task.
-  Task *current_task = running_task;
+  Task *current_task = TASK_RunningTask;
   if(current_task == NULL)
 	{
 	  printf("Current task is NULL\n");
@@ -155,7 +153,7 @@ void TASK_ContextSwitch(Task *new_task)
   // Re-queue the current task.
   LIST_Remove(TASK_ReadyList, new_task);
   LIST_AddTail(TASK_ReadyList, new_task);
-  running_task = new_task;
+  TASK_RunningTask = new_task;
 
   //TASK_PrintTaskList(TASK_ReadyList);
   printf("Current task is %06X, new task is %06X\n", current_task, new_task);
@@ -202,9 +200,9 @@ Task *TASK_FindReadyTask()
     return task;
   }
 
-  printf("No tasks are ready, returning task %06X\n", running_task);
+  printf("No tasks are ready, returning task %06X\n", TASK_RunningTask);
   // Nothing else is ready, so just load the current task again.
-  return running_task;
+  return TASK_RunningTask;
 }
 
 void TASK_WaitForMessage()
@@ -215,20 +213,20 @@ void TASK_WaitForMessage()
   // Atomic operation.
   TASK_ForbidInterrupts();
   
-  if(running_task == NULL)
+  if(TASK_RunningTask == NULL)
   {
     printf("Running task is NULL\n");
   }
   else
   {
-    printf("Task %06X is now waiting for a message\n", running_task);
-    running_task->info->state = TASK_WAITING;
-    running_task->info->signals.waiting |= SIG_MESSAGE;
-    printf("Task %06X is no longer ready\n", running_task);
+    printf("Task %06X is now waiting for a message\n", TASK_RunningTask);
+    TASK_RunningTask->info->state = TASK_WAITING;
+    TASK_RunningTask->info->signals.waiting |= SIG_MESSAGE;
+    printf("Task %06X is no longer ready\n", TASK_RunningTask);
 
     // This doesn't work - we end up with a loop in the waiting list.
-    LIST_Remove(TASK_ReadyList, running_task);
-    LIST_AddTail(TASK_WaitingList, running_task);
+    LIST_Remove(TASK_ReadyList, TASK_RunningTask);
+    LIST_AddTail(TASK_WaitingList, TASK_RunningTask);
   }
 
   //TASK_PrintTaskList(TASK_ReadyList);
@@ -270,5 +268,5 @@ void TASK_ProcessSignals()
 
 Task *TASK_GetRunningTask()
 {
-  return running_task;  
+  return TASK_RunningTask;  
 }

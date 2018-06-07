@@ -5,9 +5,13 @@
 
 	include "stdio.i"
 
+	; methods
 	public	_TASK_InitSubsystem
 	public	_TASK_ProcessQuantumASM
 	public	_TASK_SwitchingEnabled
+
+	; vars
+	public	_TASK_RunningTask
 
 	code
 
@@ -40,10 +44,21 @@ _TASK_ContextSwitchASM:
 	LINK	a6,#-16
 	move.l	a0,-4(a6) 	; -4(a6) = new_task
 
+; Is a context switch required?
+	move.l	-4(a6),a0
+	cmp.l	_TASK_RunningTask,a0
+	bne		.performContextSwitch
+
+	; No switch is required if running task == new task
+	bra		.done
+
+.performContextSwitch:
 	PUSH	a0
 	PUSH	#str_ContextSwitch
 	JSR		_simple_printf
+	FIXSTAK #8
 
+.done:
 	UNLK	a6
 	POPREGS
 	RTS
@@ -71,7 +86,7 @@ _TASK_FindReadyTaskASM:
 	bra		.done
 
 .returnRunningTask:
-	move.l	_running_task,a0
+	move.l	_TASK_RunningTask,a0
 	PUSH	a0
 	PUSH	#str_NoTaskIsReady
 	JSR		_simple_printf
@@ -116,6 +131,9 @@ _TASK_InitSubsystem:
 
 	move.b	#$17,MFPTACR
 
+	; Initialize task variables
+	clr.l	_TASK_RunningTask
+
 	POPREGS
 	RTS
 
@@ -129,4 +147,5 @@ str_TODO:			dc.b "TODO: the rest of the task scheduler",NL,0
 
 	data
 	cnop 0,2
-_TASK_SwitchingEnabled dc.b 0
+_TASK_SwitchingEnabled 	dc.b 0
+_TASK_RunningTask		dc.l 0
