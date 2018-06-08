@@ -41,3 +41,18 @@
     ULONG   TI_SavedD7
 
     LABEL   TI_SIZE
+
+**********************
+* TS = Task State
+TS_RUNNING  = 0
+TS_READY    = 1
+TS_WAITING  = 2
+TS_ADDED    = 3
+TS_REMOVED  = 4
+
+* TSIG = Task Signal
+TSIG_ABORT  = 0
+
+* TH = Task Heap
+TH_SYSHEAP  = 0
+TH_APPHEAP  = 1

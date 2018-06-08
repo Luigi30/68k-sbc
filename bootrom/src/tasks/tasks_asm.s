@@ -3,6 +3,8 @@
 	include "stack.i"
 	include "list.i"
 
+	include "tasks/types.i"
+
 	include "stdio.i"
 
 	; methods
@@ -58,9 +60,57 @@ _TASK_ContextSwitchASM:
 	JSR		_simple_printf
 	FIXSTAK #8
 
+.curTaskNull
+	move.l	_TASK_RunningTask,a0
+	cmp.l	#0,a0
+	bne		.backupOldContext
+
+* Current task is NULL, so nothing to back up.
+	PUSH	#str_CurTaskNull
+	JSR		_simple_printf
+	FIXSTAK	#4
+	bra		.setupNewTask
+
+.backupOldContext:
+* Back up the current task context.
+	PUSH	_TASK_RunningTask
+	PUSH	#str_BackingUpCtx
+	JSR		_simple_printf
+	FIXSTAK	#8
+
+.setupNewTask:
+	JSR		TASK_RestoreSavedContext
+	
+	* De-queue new task...
+	move.l	_TASK_ReadyList,a0
+	move.l	_TASK_RunningTask,a1
+	REMOVE
+
+	* ...Re-queue new task.
+	move.l	_TASK_ReadyList,a0
+	move.l	_TASK_RunningTask,a1
+	ADDTAIL
+
 .done:
 	UNLK	a6
 	POPREGS
+	RTS
+
+***********************
+TASK_RestoreSavedContext:
+	move.w	#15,d0
+	move.l	#_ExecutingTaskRegisters,a0
+	move.l	-4(a6),a1	; base of new task
+	move.l	TT_TaskInfo(a1),a1	; dereference, point to TaskInfo structure
+
+.loop:
+	move.l	(a1)+,(a0)+	; copy saved registers to our array
+	dbra	d0,.loop
+
+*  ExecutingTaskRegisters[7] = (uint32_t)new_task->info->stack_pointer;
+*  SFRAME_PC = new_task->info->pc;
+*  SFRAME_SR = new_task->info->status_register;	
+
 	RTS
 
 ***********************
@@ -142,6 +192,8 @@ str_NoTaskIsReady: 	dc.b "No task is ready. Returning the running task: %06X",NL
 str_TaskIsReady:	dc.b "Task %06X is ready",NL,0
 
 str_ContextSwitch:	dc.b "*** Context Switch to Task %06X ***",NL,0
+str_CurTaskNull		dc.b "Current task is NULL. First run?",NL,0
+str_BackingUpCtx	dc.b "Backing up context of task %06X",NL,0
 
 str_TODO:			dc.b "TODO: the rest of the task scheduler",NL,0
 
