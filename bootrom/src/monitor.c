@@ -18,6 +18,8 @@ extern void DRAW_ScreenFill(__reg("d0") uint8_t color);
 void MonitorTask();
 void VGATask();
 
+void testtask1();
+
 void Monitor_Go()
 {  
   DRAW_Init();
@@ -28,9 +30,10 @@ void Monitor_Go()
   MMIO8(0x600013) = MMIO8(0x600013) | 0x10; // enable MFP serial input interrupt
   DEVICE_InitSubsystem();
   DEVICE_Mouse_Create();
-  DEVICE_Keyboard_Create();
+//  DEVICE_Keyboard_Create();
   DEVICE_PrintAllDevices();
 
+/*
   printf("Testing message queue\n");
   DEVICE_Device *kbd = DEVICE_FindDeviceByName("keyboard.device");
   printf("Creating a message\n");
@@ -39,7 +42,8 @@ void Monitor_Go()
   printf("Sending a message at %06X to port %06X\n", msg, &(kbd->message_port));
   IPC_SendMessage(msg, &(kbd->message_port));
   DEVICE_DoCommand("keyboard.device", CMD_OPEN);
-  
+*/
+
   Task *task1 = MEMMGR_NewPtr(sizeof(Task)+8, H_SYSHEAP);
   TaskInfo *task1_info = MEMMGR_NewPtr(sizeof(TaskInfo), H_SYSHEAP);
   task1->info = task1_info;
@@ -49,9 +53,15 @@ void Monitor_Go()
   TaskInfo *task2_info = MEMMGR_NewPtr(sizeof(TaskInfo), H_SYSHEAP);
   task2->info = MEMMGR_NewPtr(sizeof(TaskInfo), H_SYSHEAP);
   task2->info->heap = TASK_SYSHEAP;
+
+  Task *task3 = MEMMGR_NewPtr(sizeof(Task)+8, H_SYSHEAP);
+  TaskInfo *task3_info = MEMMGR_NewPtr(sizeof(TaskInfo), H_SYSHEAP);
+  task3->info = MEMMGR_NewPtr(sizeof(TaskInfo), H_SYSHEAP);
+  task3->info->heap = TASK_SYSHEAP;
   
   //TASK_Add(task1, MonitorTask, NULL, 4096);
   TASK_Add(task2, VGATask, NULL, 4096);
+  TASK_Add(task3, testtask1, NULL, 4096);
   
   TASK_EnableSwitching(1);
   TASK_AllowInterrupts();

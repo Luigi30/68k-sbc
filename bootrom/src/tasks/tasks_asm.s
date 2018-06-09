@@ -14,6 +14,8 @@
 
 	; vars
 	public	_TASK_RunningTask
+	public	_TASK_SFRAME_PC
+	public	_TASK_SFRAME_SR
 
 	code
 
@@ -30,11 +32,11 @@ _TASK_ProcessQuantumASM:
 	JSR		_TASK_FindReadyTaskASM ; a0 = the next task to execute
 	JSR		_TASK_ContextSwitchASM
 
-	PUSH	#str_TODO
-	JSR		_simple_printf
-	FIXSTAK #8
-.loop:
-	bra		.loop
+*	PUSH	#str_TODO
+*	JSR		_simple_printf
+*	FIXSTAK #8
+*.loop:
+*	bra		.loop
 
 	bra		TASK_ExitScheduler
 
@@ -60,7 +62,7 @@ _TASK_ContextSwitchASM:
 	JSR		_simple_printf
 	FIXSTAK #8
 
-.curTaskNull
+.curTaskNull:
 	move.l	_TASK_RunningTask,a0
 	cmp.l	#0,a0
 	bne		.backupOldContext
@@ -78,8 +80,40 @@ _TASK_ContextSwitchASM:
 	JSR		_simple_printf
 	FIXSTAK	#8
 
+* All the crap inside the ELSE block of TASK_ContextSwitch
+	move.l	_TASK_RunningTask,a0
+
+	move.l	TT_TaskInfo(a0),a1
+	add.l	#TI_SavedA0,a1
+
+	move.w	#15,d0
+	move.l	_ExecutingTaskRegisters,a2
+
+.saveRegsLoop:
+	move.l	(a2)+,(a1)+
+	dbra	d0,.saveRegsLoop
+
+	move.l	TT_TaskInfo(a0),a1
+	add.l	#TI_ProgramCntr,a1
+	move.l	_TASK_SFRAME_PC,(a1)
+
+	move.l	TT_TaskInfo(a0),a1
+	add.l	#TI_StatusReg,a1
+	move.l	_TASK_SFRAME_SR,(a1)
+
+* Enqueue the old task.
+	move.l	_TASK_ReadyList,a0
+	move.l	-4(a6),a1
+	ADDTAIL
+
+* Fallen out of the if/else block.
 .setupNewTask:
 	JSR		TASK_RestoreSavedContext
+
+	move.l	-4(a6),a0
+	move.l	TT_TaskInfo(a0),a1
+	add.l	#TI_State,a1
+	move.l	#TS_RUNNING,(a1)
 	
 	* De-queue new task...
 	move.l	_TASK_ReadyList,a0
@@ -87,9 +121,11 @@ _TASK_ContextSwitchASM:
 	REMOVE
 
 	* ...Re-queue new task.
-	move.l	_TASK_ReadyList,a0
-	move.l	_TASK_RunningTask,a1
-	ADDTAIL
+*	move.l	_TASK_ReadyList,a0
+*	move.l	_TASK_RunningTask,a1
+*	ADDTAIL
+
+	move.l	-4(a6),_TASK_RunningTask
 
 .done:
 	UNLK	a6
@@ -103,13 +139,24 @@ TASK_RestoreSavedContext:
 	move.l	-4(a6),a1	; base of new task
 	move.l	TT_TaskInfo(a1),a1	; dereference, point to TaskInfo structure
 
+	move.l	a1,a2
+	add.l	#TI_SavedA0,a2
+
 .loop:
-	move.l	(a1)+,(a0)+	; copy saved registers to our array
+	move.l	(a2)+,(a0)+	; copy saved registers to our array
 	dbra	d0,.loop
 
-*  ExecutingTaskRegisters[7] = (uint32_t)new_task->info->stack_pointer;
-*  SFRAME_PC = new_task->info->pc;
-*  SFRAME_SR = new_task->info->status_register;	
+	move.l	TI_StackPointer(a1),d0
+	move.l	#_ExecutingTaskRegisters,a0
+	add.l	#4*7,a0
+	move.l	d0,(a0)
+
+	move.l	TI_ProgramCntr(a1),_TASK_SFRAME_PC
+	move.w	TI_StatusReg(a1),_TASK_SFRAME_SR
+
+*	PUSH	-4(a6)
+*	JSR		_TASK_Test
+*	FIXSTAK	#4
 
 	RTS
 
@@ -183,6 +230,8 @@ _TASK_InitSubsystem:
 
 	; Initialize task variables
 	clr.l	_TASK_RunningTask
+	clr.l	_TASK_SFRAME_PC
+	clr.l	_TASK_SFRAME_SR
 
 	POPREGS
 	RTS
@@ -201,3 +250,5 @@ str_TODO:			dc.b "TODO: the rest of the task scheduler",NL,0
 	cnop 0,2
 _TASK_SwitchingEnabled 	dc.b 0
 _TASK_RunningTask		dc.l 0
+_TASK_SFRAME_SR			dc.w 0
+_TASK_SFRAME_PC			dc.l 0

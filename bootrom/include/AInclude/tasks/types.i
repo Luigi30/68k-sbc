@@ -5,8 +5,8 @@
     LABEL   TT_SIZE
 
  STRUCTURE  TI_TaskInfo,0   ; struct TaskInfo
-    UBYTE   TI_State        ; TASK_State state
-    UBYTE   TI_Heap         ; TASK_Heap heap
+    ULONG   TI_State        ; TASK_State state
+    ULONG   TI_Heap         ; TASK_Heap heap
     
     CPTR    TI_StackLow     ; bottom of the alloc'ed stack
     CPTR    TI_StackHigh    ; top of the alloc'ed stack

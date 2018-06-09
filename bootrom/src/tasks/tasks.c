@@ -1,8 +1,8 @@
 #include "tasks/tasks.h"
 
 uint32_t ExecutingTaskRegisters[16];
-uint16_t SFRAME_SR = 0;
-uint32_t SFRAME_PC = 0;
+extern uint16_t TASK_SFRAME_SR;
+extern uint32_t TASK_SFRAME_PC;
 
 extern uint8_t TASK_SwitchingEnabled;
 extern Task *TASK_RunningTask;
@@ -129,8 +129,8 @@ void TASK_ContextSwitch(Task *new_task)
 		  current_task->info->registers[i] = ExecutingTaskRegisters[i];
 		}
 	  current_task->info->stack_pointer = (CPTR)ExecutingTaskRegisters[7];
-	  current_task->info->pc = SFRAME_PC;
-	  current_task->info->status_register = SFRAME_SR;
+	  current_task->info->pc = TASK_SFRAME_PC;
+	  current_task->info->status_register = TASK_SFRAME_SR;
 
     // If something forced this task to wait, then it won't be in RUNNING state and we don't want it to be READY.
     if(current_task->info->state == TASK_RUNNING)
@@ -152,7 +152,7 @@ void TASK_ContextSwitch(Task *new_task)
 
   // Re-queue the current task.
   LIST_Remove(TASK_ReadyList, new_task);
-  LIST_AddTail(TASK_ReadyList, new_task);
+//  LIST_AddTail(TASK_ReadyList, new_task);
   TASK_RunningTask = new_task;
 
   //TASK_PrintTaskList(TASK_ReadyList);
@@ -171,8 +171,8 @@ void TASK_RestoreRegisters(Task *new_task)
   //printf("New task is %x, new A7 is $%x\n", new_task, new_task->info->stack_pointer);
   
   ExecutingTaskRegisters[7] = (uint32_t)new_task->info->stack_pointer;
-  SFRAME_PC = new_task->info->pc;
-  SFRAME_SR = new_task->info->status_register;
+  TASK_SFRAME_PC = new_task->info->pc;
+  TASK_SFRAME_SR = new_task->info->status_register;
 }
 
 void TASK_ForbidInterrupts()
@@ -269,4 +269,14 @@ void TASK_ProcessSignals()
 Task *TASK_GetRunningTask()
 {
   return TASK_RunningTask;  
+}
+
+void TASK_Test(Task *task)
+{
+  printf("saved pc: %08X\n", TASK_SFRAME_PC);
+  printf("saved sr: %04X\n", TASK_SFRAME_SR);
+  for(int i=0;i<16;i++)
+  {
+    printf("register: %08X\n", ExecutingTaskRegisters[i]);
+  }
 }

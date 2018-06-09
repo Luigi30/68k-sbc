@@ -72,4 +72,6 @@ struct Task * TASK_GetRunningTask();
 
 extern void TASK_SwitchToNextReadyTask();
 
+void TASK_Test(Task *task);
+
 #endif

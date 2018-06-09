@@ -58,8 +58,8 @@ _TIMERA_ISR:
 	move.l	d6,_ExecutingTaskRegisters+56
 	move.l	d7,_ExecutingTaskRegisters+60
 
-	move.w 	(sp),_SFRAME_SR
-	move.l	2(sp),_SFRAME_PC
+	move.w 	(sp),_TASK_SFRAME_SR
+	move.l	2(sp),_TASK_SFRAME_PC
 
 	;; Acknowledge the timer interrupt.
 	move.b	MFPISRA,d0
@@ -88,8 +88,8 @@ _TIMERA_ISR:
 	move.l	_ExecutingTaskRegisters+60,d7
 
 	;; Build a new exception frame.
-	move.w	_SFRAME_SR,(sp)
-	move.l	_SFRAME_PC,2(sp)
+	move.w	_TASK_SFRAME_SR,(sp)
+	move.l	_TASK_SFRAME_PC,2(sp)
 	rte
 
 	data
