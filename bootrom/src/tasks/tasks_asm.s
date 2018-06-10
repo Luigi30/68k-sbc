@@ -32,11 +32,9 @@ _TASK_ProcessQuantumASM:
 	JSR		_TASK_FindReadyTaskASM ; a0 = the next task to execute
 	JSR		_TASK_ContextSwitchASM
 
-*	PUSH	#str_TODO
-*	JSR		_simple_printf
-*	FIXSTAK #8
-*.loop:
-*	bra		.loop
+*	PUSH	_TASK_ReadyList
+*	JSR		_TASK_PrintTaskList
+*	FIXSTAK #4
 
 	bra		TASK_ExitScheduler
 
@@ -57,10 +55,10 @@ _TASK_ContextSwitchASM:
 	bra		.done
 
 .performContextSwitch:
-	PUSH	a0
-	PUSH	#str_ContextSwitch
-	JSR		_simple_printf
-	FIXSTAK #8
+*	PUSH	a0
+*	PUSH	#str_ContextSwitch
+*	JSR		_simple_printf
+*	FIXSTAK #8
 
 .curTaskNull:
 	move.l	_TASK_RunningTask,a0
@@ -68,42 +66,18 @@ _TASK_ContextSwitchASM:
 	bne		.backupOldContext
 
 * Current task is NULL, so nothing to back up.
-	PUSH	#str_CurTaskNull
-	JSR		_simple_printf
-	FIXSTAK	#4
+*	PUSH	#str_CurTaskNull
+*	JSR		_simple_printf
+*	FIXSTAK	#4
 	bra		.setupNewTask
 
 .backupOldContext:
 * Back up the current task context.
-	PUSH	_TASK_RunningTask
-	PUSH	#str_BackingUpCtx
-	JSR		_simple_printf
-	FIXSTAK	#8
-
-* All the crap inside the ELSE block of TASK_ContextSwitch
-	move.l	_TASK_RunningTask,a0
-
-	move.l	TT_TaskInfo(a0),a1
-	add.l	#TI_SavedA0,a1
-
-	move.w	#15,d0
-	move.l	_ExecutingTaskRegisters,a2
-
-.saveRegsLoop:
-	move.l	(a2)+,(a1)+
-	dbra	d0,.saveRegsLoop
-
-	move.l	TT_TaskInfo(a0),a1
-	add.l	#TI_ProgramCntr,a1
-	move.l	_TASK_SFRAME_PC,(a1)
-
-	move.l	TT_TaskInfo(a0),a1
-	add.l	#TI_StatusReg,a1
-	move.l	_TASK_SFRAME_SR,(a1)
+	JSR		_TASK_BackupOldContext
 
 * Enqueue the old task.
 	move.l	_TASK_ReadyList,a0
-	move.l	-4(a6),a1
+	move.l	_TASK_RunningTask,a1
 	ADDTAIL
 
 * Fallen out of the if/else block.
@@ -114,16 +88,6 @@ _TASK_ContextSwitchASM:
 	move.l	TT_TaskInfo(a0),a1
 	add.l	#TI_State,a1
 	move.l	#TS_RUNNING,(a1)
-	
-	* De-queue new task...
-	move.l	_TASK_ReadyList,a0
-	move.l	_TASK_RunningTask,a1
-	REMOVE
-
-	* ...Re-queue new task.
-*	move.l	_TASK_ReadyList,a0
-*	move.l	_TASK_RunningTask,a1
-*	ADDTAIL
 
 	move.l	-4(a6),_TASK_RunningTask
 
@@ -134,6 +98,10 @@ _TASK_ContextSwitchASM:
 
 ***********************
 TASK_RestoreSavedContext:
+*	pea		str_RestoringCtx
+*	JSR		_simple_printf
+*	FIXSTAK	#4
+
 	move.w	#15,d0
 	move.l	#_ExecutingTaskRegisters,a0
 	move.l	-4(a6),a1	; base of new task
@@ -158,6 +126,47 @@ TASK_RestoreSavedContext:
 *	JSR		_TASK_Test
 *	FIXSTAK	#4
 
+*	pea		str_RestoreCtxDone
+*	JSR		_simple_printf
+*	FIXSTAK	#4
+
+	RTS
+
+***********************
+*
+_TASK_BackupOldContext:
+*	PUSH	_TASK_RunningTask
+*	PUSH	#str_BackingUpCtx
+*	JSR		_simple_printf
+*	FIXSTAK	#8
+
+* All the crap inside the ELSE block of TASK_ContextSwitch
+	move.l	_TASK_RunningTask,a0
+
+	move.l	TT_TaskInfo(a0),a1
+	add.l	#TI_SavedA0,a1
+
+	move.w	#15,d0
+	move.l	#_ExecutingTaskRegisters,a2
+
+.saveRegsLoop:
+	move.l	(a2)+,(a1)+
+	dbra	d0,.saveRegsLoop
+
+	move.l	#_ExecutingTaskRegisters+28,a2
+
+	move.l	TT_TaskInfo(a0),a1
+	add.l	#TI_StackPointer,a1
+	move.l	(a2),(a1)
+
+	move.l	TT_TaskInfo(a0),a1
+	add.l	#TI_ProgramCntr,a1
+	move.l	_TASK_SFRAME_PC,(a1)
+
+	move.l	TT_TaskInfo(a0),a1
+	add.l	#TI_StatusReg,a1
+	move.l	_TASK_SFRAME_SR,(a1)
+
 	RTS
 
 ***********************
@@ -175,20 +184,20 @@ _TASK_FindReadyTaskASM:
 ; It's not empty so return the head node in a0.
 	REMHEAD
 	move.l	d0,a0
-	PUSH	a0
-	PUSH	#str_TaskIsReady
-	JSR		_simple_printf
-	FIXSTAK	#4			; pop string address, keep a0
-	move.l	(sp)+,a0
+*	PUSH	a0
+*	PUSH	#str_TaskIsReady
+*	JSR		_simple_printf
+*	FIXSTAK	#4			; pop string address, keep a0
+*	move.l	(sp)+,a0
 	bra		.done
 
 .returnRunningTask:
 	move.l	_TASK_RunningTask,a0
-	PUSH	a0
-	PUSH	#str_NoTaskIsReady
-	JSR		_simple_printf
-	FIXSTAK #4
-	move.l	(sp)+,a0
+*	PUSH	a0
+*	PUSH	#str_NoTaskIsReady
+*	JSR		_simple_printf
+*	FIXSTAK #4
+*	move.l	(sp)+,a0
 
 .done:
 	POPR	a2-a6/d2-d6
@@ -196,6 +205,10 @@ _TASK_FindReadyTaskASM:
 
 ***********************
 TASK_ExitScheduler:
+*	pea		str_ExitScheduler
+*	JSR		_simple_printf
+*	FIXSTAK #4
+
 	RTS
 
 ***********************
@@ -237,14 +250,19 @@ _TASK_InitSubsystem:
 	RTS
 
 * Messages
-str_NoTaskIsReady: 	dc.b "No task is ready. Returning the running task: %06X",NL,0
-str_TaskIsReady:	dc.b "Task %06X is ready",NL,0
+str_NoTaskIsReady 	dc.b "No task is ready. Returning the running task: %06X",NL,0
+str_TaskIsReady		dc.b "Task %06X is ready",NL,0
 
-str_ContextSwitch:	dc.b "*** Context Switch to Task %06X ***",NL,0
+str_ContextSwitch	dc.b "*** Context Switch to Task %06X ***",NL,0
 str_CurTaskNull		dc.b "Current task is NULL. First run?",NL,0
 str_BackingUpCtx	dc.b "Backing up context of task %06X",NL,0
 
+str_RestoringCtx	dc.b "Restoring context of task",NL,0
+str_RestoreCtxDone	dc.b "Context restored",NL,0
+
 str_TODO:			dc.b "TODO: the rest of the task scheduler",NL,0
+
+str_ExitScheduler	dc.b "Exiting task scheduler...",NL,0
 
 	data
 	cnop 0,2

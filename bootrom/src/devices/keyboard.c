@@ -74,6 +74,7 @@ void KBD_Task()
     IPC_Message *msg = IPC_GetMessage();
     printf("%c\n", ((KBD_KeyEvent *)msg)->keycode);
 
+    //TODO: the task scheduler doesn't freeze this task here
     TASK_WaitForMessage();
   }  
 }

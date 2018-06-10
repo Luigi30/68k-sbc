@@ -62,7 +62,7 @@ clean:
 
 run:
 #	/mnt/c/msys64/home/Luigi/mame/mame64.exe luigisbc -debug -window -rompath /mnt/c/msys64/home/Luigi/mame/roms
-	~/mame/mame64 luigisbc -debug -window -rompath ~/mame/roms
+	~/mame/mame64 luigisbc -debug -window -rompath ~/mame/roms -uimodekey DEL
 
 symbols:
 	m68k-elf-nm $(BINDIR)/bootrom.elf > ./bootrom.sym
