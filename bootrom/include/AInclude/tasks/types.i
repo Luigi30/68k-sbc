@@ -56,3 +56,5 @@ TSIG_ABORT  = 0
 * TH = Task Heap
 TH_SYSHEAP  = 0
 TH_APPHEAP  = 1
+
+SIG_MESSAGE = 2

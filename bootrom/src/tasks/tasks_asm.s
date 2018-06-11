@@ -13,6 +13,7 @@
 	public	_TASK_SwitchingEnabled
 	public _TASK_AllowInterrupts
 	public _TASK_ForbidInterrupts
+	public _TASK_WaitForMessage
 
 	; vars
 	public	_TASK_RunningTask
@@ -60,6 +61,11 @@ _TASK_ContextSwitchASM:
 	LINK	a6,#-16
 	move.l	a0,-4(a6) 	; -4(a6) = new_task
 
+	PUSH	a0
+	PUSH	#str_ContextSwitch
+	JSR		_simple_printf
+	FIXSTAK #8
+
 ; Is a context switch required?
 	move.l	-4(a6),a0
 	cmp.l	_TASK_RunningTask,a0
@@ -69,10 +75,6 @@ _TASK_ContextSwitchASM:
 	bra		.done
 
 .performContextSwitch:
-*	PUSH	a0
-*	PUSH	#str_ContextSwitch
-*	JSR		_simple_printf
-*	FIXSTAK #8
 
 .curTaskNull:
 	move.l	_TASK_RunningTask,a0
@@ -90,6 +92,9 @@ _TASK_ContextSwitchASM:
 	JSR		_TASK_BackupOldContext
 
 * Enqueue the old task.
+	cmp.b	#0,_TASK_LastTaskIsWaitingFlag ; did the last task end due to a Wait func?
+	bne		.setupNewTask 	; if yes, do not enqueue it again
+
 	move.l	_TASK_ReadyList,a0
 	move.l	_TASK_RunningTask,a1
 	ADDTAIL
@@ -106,6 +111,8 @@ _TASK_ContextSwitchASM:
 	move.l	-4(a6),_TASK_RunningTask
 
 .done:
+	move.b	#0,_TASK_LastTaskIsWaitingFlag ; clear the flag so we don't miss a task
+
 	UNLK	a6
 	POPREGS
 	RTS
@@ -243,8 +250,11 @@ _TASK_WaitForMessage:
 	; Add it to WaitingList and remove it from ReadyList.
 
 .setTaskToWaiting:
-	; TASK_RunningTask->info->state = TASK_WAITING;
-    ; TASK_RunningTask->info->signals.waiting |= SIG_MESSAGE;
+	move.l	_TASK_RunningTask,a0
+	move.l	TT_TaskInfo(a0),a0
+	move.l	#TS_WAITING,TI_State(a0)
+
+	or.l	#SIG_MESSAGE,TI_SigsWait(a0)
 
 	move.l	_TASK_ReadyList,a0
 	move.l	_TASK_RunningTask,a1
@@ -254,8 +264,14 @@ _TASK_WaitForMessage:
 	move.l	_TASK_RunningTask,a1
 	ADDTAIL
 
-.done:
-	rts
+	move.b	#$FF,_TASK_LastTaskIsWaitingFlag
+
+_TASK_WaitForMessageCtxSwitch:
+	JSR		_TASK_AllowInterrupts
+	or.b	#$20,MFPIPRA	; force a context switch
+
+.loop:
+	bra 	.loop
 
 ***********************
 _TASK_InitSubsystem:
@@ -326,3 +342,4 @@ _TASK_SwitchingEnabled 	dc.b 0
 _TASK_RunningTask		dc.l 0
 _TASK_SFRAME_SR			dc.w 0
 _TASK_SFRAME_PC			dc.l 0
+_TASK_LastTaskIsWaitingFlag	dc.b 0

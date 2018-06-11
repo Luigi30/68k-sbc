@@ -207,6 +207,7 @@ Task *TASK_FindReadyTask()
   return TASK_RunningTask;
 }
 
+/*
 void TASK_WaitForMessage()
 {
   // Set the current task to TASK_WAITING.
@@ -237,6 +238,7 @@ void TASK_WaitForMessage()
 
   MMIO8(0x60000B) |= 0x20; // Trigger a context switch.
 }
+*/
 
 void TASK_PrintTaskList(List *list)
 {
