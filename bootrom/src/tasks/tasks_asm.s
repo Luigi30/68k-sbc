@@ -11,6 +11,8 @@
 	public	_TASK_InitSubsystem
 	public	_TASK_ProcessQuantumASM
 	public	_TASK_SwitchingEnabled
+	public _TASK_AllowInterrupts
+	public _TASK_ForbidInterrupts
 
 	; vars
 	public	_TASK_RunningTask
@@ -36,7 +38,19 @@ _TASK_ProcessQuantumASM:
 *	JSR		_TASK_PrintTaskList
 *	FIXSTAK #4
 
+	JSR		_TASK_AllowInterrupts
 	bra		TASK_ExitScheduler
+
+***********************
+* Enable the timer interrupt so we process timeslices.
+_TASK_AllowInterrupts:
+	or.b	#$20,MFPIMRA
+	RTS
+
+* Disable the timer interrupt so we don't process timeslices.
+_TASK_ForbidInterrupts:
+	and.b	#$DF,MFPIMRA
+	RTS
 
 ***********************
 * Perform a context switch to the task provided in a0.
@@ -212,6 +226,38 @@ TASK_ExitScheduler:
 	RTS
 
 ***********************
+_TASK_WaitForMessage:
+	JSR		_TASK_ForbidInterrupts
+	; Is there a running task?
+
+	cmp.l	#0,_TASK_RunningTask
+	bne		.setTaskToWaiting
+
+	pea		str_WaitingOnNull
+	jsr		_simple_printf
+	FIXSTAK	#4
+	jsr		TASK_SysHalt
+
+	; If there is a running task, mark it as waiting
+	; for SIG_MESSAGE.
+	; Add it to WaitingList and remove it from ReadyList.
+
+.setTaskToWaiting:
+	; TASK_RunningTask->info->state = TASK_WAITING;
+    ; TASK_RunningTask->info->signals.waiting |= SIG_MESSAGE;
+
+	move.l	_TASK_ReadyList,a0
+	move.l	_TASK_RunningTask,a1
+	REMOVE
+
+	move.l	_TASK_WaitingList,a0
+	move.l	_TASK_RunningTask,a1
+	ADDTAIL
+
+.done:
+	rts
+
+***********************
 _TASK_InitSubsystem:
 	PUSHREGS
 
@@ -249,6 +295,12 @@ _TASK_InitSubsystem:
 	POPREGS
 	RTS
 
+TASK_SysHalt:
+	pea		str_SysHalt
+	JSR		_simple_printf
+.loop
+	bra		.loop
+
 * Messages
 str_NoTaskIsReady 	dc.b "No task is ready. Returning the running task: %06X",NL,0
 str_TaskIsReady		dc.b "Task %06X is ready",NL,0
@@ -260,9 +312,13 @@ str_BackingUpCtx	dc.b "Backing up context of task %06X",NL,0
 str_RestoringCtx	dc.b "Restoring context of task",NL,0
 str_RestoreCtxDone	dc.b "Context restored",NL,0
 
+str_WaitingOnNull	dc.b "*** Task error! Waiting on a null task.",NL,0
+
 str_TODO:			dc.b "TODO: the rest of the task scheduler",NL,0
 
 str_ExitScheduler	dc.b "Exiting task scheduler...",NL,0
+
+str_SysHalt			dc.b "System halted.",NL,0
 
 	data
 	cnop 0,2

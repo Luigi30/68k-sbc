@@ -175,6 +175,7 @@ void TASK_RestoreRegisters(Task *new_task)
   TASK_SFRAME_SR = new_task->info->status_register;
 }
 
+/*
 void TASK_ForbidInterrupts()
 {
   // Disable the timer interrupt during *sensitive* operations.
@@ -186,6 +187,7 @@ void TASK_AllowInterrupts()
   // Enable the timer interrupt, allowing timeslices to be processed.
   MMIO8(0x600013) = MMIO8(0x600013) | 0x20;
 }
+*/
 
 Task *TASK_FindReadyTask()
 {
